@@ -6,199 +6,168 @@
 <title>ДЕНЬ — Планировщик Дисциплины</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;700;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0a; --surface: #111; --surface2: #1a1a1a;
-    --border: #222; --accent: #e8ff47; --accent2: #ff4747;
-    --text: #f0f0f0; --muted: #555; --done: #47ff8a;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Space Mono', monospace; min-height: 100vh; overflow-x: hidden; }
-
-  /* HEADER */
-  header {
-    border-bottom: 1px solid var(--border); padding: 16px 24px;
-    display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; background: var(--bg); z-index: 100;
-  }
-  .logo { font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 20px; letter-spacing: -1px; color: var(--accent); }
-  .header-right { display: flex; gap: 8px; align-items: center; }
-
-  .hbtn {
-    display: flex; align-items: center; gap: 5px;
-    background: var(--surface2); border: 1px solid var(--border);
-    padding: 7px 12px; font-family: 'Space Mono', monospace;
-    font-size: 10px; color: var(--muted); cursor: pointer;
-    transition: all 0.2s; letter-spacing: 1px;
-  }
-  .hbtn:hover { border-color: var(--accent); color: var(--accent); }
-  .hbtn.on { color: var(--done); border-color: var(--done); }
-  .hbtn.denied { color: var(--accent2); border-color: var(--accent2); cursor: not-allowed; }
-  .streak-badge { display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); padding: 7px 12px; font-size: 11px; }
-  .streak-num { font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 16px; color: var(--accent); }
-
-  /* WEEK NAV */
-  .week-nav {
-    border-bottom: 1px solid var(--border); padding: 0 24px;
-    display: flex; align-items: center; gap: 0; overflow-x: auto;
-  }
-  .week-arrow {
-    background: none; border: none; color: var(--muted); font-size: 18px;
-    cursor: pointer; padding: 12px 10px; transition: color 0.15s; flex-shrink: 0;
-  }
-  .week-arrow:hover { color: var(--accent); }
-  .week-days { display: flex; flex: 1; }
-  .day-tab {
-    flex: 1; min-width: 70px; padding: 12px 8px; text-align: center;
-    cursor: pointer; border-bottom: 2px solid transparent;
-    transition: all 0.15s; border-right: 1px solid var(--border);
-  }
-  .day-tab:last-child { border-right: none; }
-  .day-tab:hover { background: var(--surface); }
-  .day-tab.active { border-bottom-color: var(--accent); background: rgba(232,255,71,0.04); }
-  .day-tab.today .day-num { color: var(--accent); }
-  .day-name { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
-  .day-num { font-family: 'Unbounded', sans-serif; font-size: 16px; font-weight: 700; margin-top: 2px; }
-  .day-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); margin: 4px auto 0; opacity: 0; }
-  .day-tab.has-blocks .day-dot { opacity: 1; }
-
-  /* MAIN */
-  main { display: grid; grid-template-columns: 1fr 320px; min-height: calc(100vh - 113px); }
-
-  /* TIMELINE */
-  .timeline-panel { border-right: 1px solid var(--border); padding: 24px; overflow-y: auto; }
-  .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-  .panel-title { font-family: 'Unbounded', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; }
-  .add-btn { background: var(--accent); color: #000; border: none; padding: 6px 14px; font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; cursor: pointer; letter-spacing: 1px; transition: opacity 0.15s; }
-  .add-btn:hover { opacity: 0.8; }
-
-  .time-block { display: grid; grid-template-columns: 52px 1fr; gap: 0 12px; margin-bottom: 3px; }
-  .time-label { font-size: 10px; color: var(--muted); padding-top: 14px; text-align: right; letter-spacing: 1px; }
-  .block-content { border-left: 2px solid var(--border); padding: 10px 14px; position: relative; min-height: 46px; transition: all 0.2s; }
-  .block-content:hover { background: var(--surface); }
-  .block-content.active { border-left-color: var(--accent); background: rgba(232,255,71,0.04); }
-  .block-content.done { border-left-color: var(--done); opacity: 0.55; }
-  .block-content.done .block-name { text-decoration: line-through; }
-  .block-dot { position: absolute; left: -5px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--border); border: 2px solid var(--bg); transition: background 0.2s; }
-  .block-content.active .block-dot { background: var(--accent); }
-  .block-content.done .block-dot { background: var(--done); }
-  .block-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
-  .block-cat { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
-  .block-actions { position: absolute; right: 10px; top: 10px; display: none; gap: 5px; }
-  .block-content:hover .block-actions { display: flex; }
-  .block-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); width: 24px; height: 24px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
-  .block-btn:hover { background: var(--accent); color: #000; }
-  .block-btn.del:hover { background: var(--accent2); color: #fff; }
-
-  .cat-work .block-content:not(.done) { border-left-color: #4799ff; }
-  .cat-health .block-content:not(.done) { border-left-color: #47ff8a; }
-  .cat-learning .block-content:not(.done) { border-left-color: #ff9e47; }
-  .cat-personal .block-content:not(.done) { border-left-color: #b447ff; }
-  .cat-rest .block-content:not(.done) { border-left-color: #47e0ff; }
-  .cat-work .block-dot { background: #4799ff; }
-  .cat-health .block-dot { background: #47ff8a; }
-  .cat-learning .block-dot { background: #ff9e47; }
-  .cat-personal .block-dot { background: #b447ff; }
-  .cat-rest .block-dot { background: #47e0ff; }
-  .cat-tag { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
-  .ct-work{background:#4799ff} .ct-health{background:#47ff8a} .ct-learning{background:#ff9e47} .ct-personal{background:#b447ff} .ct-rest{background:#47e0ff}
-
-  /* RIGHT PANEL */
-  .right-panel { display: flex; flex-direction: column; overflow-y: auto; }
-
-  /* TIMER */
-  .timer-section { padding: 20px; border-bottom: 1px solid var(--border); background: var(--surface); }
-  .timer-label { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
-  .timer-current { font-size: 10px; color: var(--accent); margin: 4px 0 0; min-height: 14px; }
-  .timer-display { font-family: 'Unbounded', sans-serif; font-size: 46px; font-weight: 900; letter-spacing: -2px; color: var(--accent); line-height: 1; margin: 8px 0 12px; font-variant-numeric: tabular-nums; }
-  .timer-controls { display: flex; gap: 6px; }
-  .t-btn { flex: 1; padding: 8px 4px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 1px; cursor: pointer; transition: all 0.15s; text-transform: uppercase; }
-  .t-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .t-btn.primary { background: var(--accent); color: #000; border-color: var(--accent); }
-  .t-btn.primary:hover { opacity: 0.85; }
-
-  /* PROGRESS */
-  .progress-section { padding: 20px; border-bottom: 1px solid var(--border); }
-  .progress-bar-wrap { background: var(--surface2); height: 3px; margin: 10px 0 4px; }
-  .progress-bar-fill { height: 100%; background: var(--accent); transition: width 0.4s ease; }
-  .progress-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 12px; }
-  .stat-box { background: var(--surface2); border: 1px solid var(--border); padding: 10px; text-align: center; }
-  .stat-num { font-family: 'Unbounded', sans-serif; font-size: 18px; font-weight: 900; color: var(--accent); display: block; }
-  .stat-lab { font-size: 8px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; display: block; }
-
-  /* CURRENT */
-  .current-section { padding: 20px; flex: 1; }
-  .current-block-card { background: var(--surface2); border: 1px solid var(--border); padding: 14px; border-left: 3px solid var(--accent); }
-  .current-tag { font-size: 9px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
-  .current-name { font-family: 'Unbounded', sans-serif; font-size: 14px; font-weight: 700; }
-  .current-time { font-size: 10px; color: var(--muted); margin-top: 4px; }
-
-  /* NOTIF SCHEDULE */
-  .notif-schedule { padding: 16px 20px; border-top: 1px solid var(--border); }
-  .notif-upcoming { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
-  .notif-item { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--muted); }
-  .notif-time { color: var(--accent); font-weight: 700; min-width: 42px; }
-  .notif-type { font-size: 9px; letter-spacing: 1px; }
-
-  /* FORM */
-  .add-form { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: center; justify-content: center; }
-  .add-form.open { display: flex; }
-  .form-card { background: var(--surface); border: 1px solid var(--border); padding: 28px; width: 400px; max-width: 92vw; }
-  .form-title { font-family: 'Unbounded', sans-serif; font-size: 14px; font-weight: 900; margin-bottom: 20px; color: var(--accent); }
-  .form-group { margin-bottom: 14px; }
-  .form-label { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; display: block; margin-bottom: 5px; }
-  .form-input, .form-select { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 9px 11px; font-family: 'Space Mono', monospace; font-size: 12px; outline: none; transition: border-color 0.2s; }
-  .form-input:focus, .form-select:focus { border-color: var(--accent); }
-  .form-select option { background: var(--surface2); }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .form-actions { display: flex; gap: 8px; margin-top: 20px; }
-  .repeat-options { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-  .repeat-day { padding: 5px 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-family: 'Space Mono', monospace; font-size: 10px; cursor: pointer; transition: all 0.15s; }
-  .repeat-day.sel { background: var(--accent); color: #000; border-color: var(--accent); }
-
-  /* TOAST */
-  #toastContainer { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-  .toast { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 12px 16px; min-width: 250px; max-width: 320px; animation: slideIn 0.3s ease forwards; }
-  .toast.warn { border-left-color: #ff9e47; }
-  .toast.end { border-left-color: var(--accent2); }
-  .toast-title { font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 3px; }
-  .toast.warn .toast-title { color: #ff9e47; }
-  .toast.end .toast-title { color: var(--accent2); }
-  .toast-body { font-size: 12px; font-weight: 700; }
-  @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-  @keyframes slideOut { from { opacity: 1; } to { opacity: 0; transform: translateX(30px); } }
-
-  ::-webkit-scrollbar { width: 3px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: var(--border); }
-
-  @media (max-width: 700px) {
-    main { grid-template-columns: 1fr; }
-    .right-panel { border-top: 1px solid var(--border); }
-    header { padding: 12px 16px; }
-    .week-nav { padding: 0 12px; }
-  }
+:root{--bg:#0a0a0a;--surface:#111;--surface2:#1a1a1a;--border:#252525;--accent:#e8ff47;--accent2:#ff4747;--accent3:#ff9e47;--text:#f0f0f0;--muted:#555;--done:#47ff8a;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;min-height:100vh;overflow-x:hidden;}
+header{border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:200;}
+.logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:19px;letter-spacing:-1px;color:var(--accent);}
+.hrow{display:flex;gap:7px;align-items:center;}
+.hbtn{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);padding:6px 11px;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);cursor:pointer;transition:all .2s;letter-spacing:1px;}
+.hbtn:hover{border-color:var(--accent);color:var(--accent);}
+.hbtn.on{color:var(--done);border-color:var(--done);}
+.hbtn.denied{color:var(--accent2);border-color:var(--accent2);cursor:not-allowed;}
+.streak-badge{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);padding:6px 11px;}
+.streak-num{font-family:'Unbounded',sans-serif;font-weight:900;font-size:15px;color:var(--accent);}
+.week-nav{border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;overflow-x:auto;}
+.week-arrow{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:10px 8px;transition:color .15s;flex-shrink:0;}
+.week-arrow:hover{color:var(--accent);}
+.week-days{display:flex;flex:1;}
+.day-tab{flex:1;min-width:64px;padding:10px 6px;text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;border-right:1px solid var(--border);}
+.day-tab:last-child{border-right:none;}
+.day-tab:hover{background:var(--surface);}
+.day-tab.active{border-bottom-color:var(--accent);background:rgba(232,255,71,.04);}
+.day-tab.today .day-num{color:var(--accent);}
+.day-name{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.day-num{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700;margin-top:2px;}
+.day-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);margin:3px auto 0;opacity:0;}
+.day-tab.has-blocks .day-dot{opacity:1;}
+.suggestions{padding:9px 20px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;overflow-x:auto;min-height:44px;}
+.sug-label{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;flex-shrink:0;}
+.sug-chip{background:var(--surface2);border:1px solid var(--border);padding:5px 10px;font-size:10px;cursor:pointer;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.sug-chip:hover{border-color:var(--accent3);color:var(--accent3);}
+.sug-chip span{opacity:.5;font-size:9px;}
+main{display:grid;grid-template-columns:1fr 310px;min-height:calc(100vh - 112px);}
+.timeline-panel{border-right:1px solid var(--border);padding:20px;overflow-y:auto;}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:8px;}
+.panel-title{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+.btn-row{display:flex;gap:6px;}
+.add-btn{background:var(--accent);color:#000;border:none;padding:6px 13px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:opacity .15s;}
+.add-btn:hover{opacity:.8;}
+.tmpl-btn{background:var(--surface2);color:var(--muted);border:1px solid var(--border);padding:6px 11px;font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;transition:all .15s;}
+.tmpl-btn:hover{border-color:var(--accent3);color:var(--accent3);}
+.time-block{display:grid;grid-template-columns:50px 1fr;gap:0 10px;margin-bottom:3px;}
+.time-block.dragging{opacity:.35;}
+.time-block.drag-over .block-content{outline:2px dashed var(--accent);}
+.time-label{font-size:10px;color:var(--muted);padding-top:13px;text-align:right;letter-spacing:1px;}
+.block-content{border-left:2px solid var(--border);padding:10px 12px;position:relative;min-height:44px;transition:all .2s;cursor:grab;}
+.block-content:active{cursor:grabbing;}
+.block-content:hover{background:var(--surface);}
+.block-content.active{border-left-color:var(--accent);background:rgba(232,255,71,.04);}
+.block-content.done{border-left-color:var(--done);opacity:.55;}
+.block-content.done .block-name{text-decoration:line-through;}
+.block-content.overrun{border-left-color:var(--accent2);background:rgba(255,71,71,.04);}
+.block-dot{position:absolute;left:-5px;top:13px;width:8px;height:8px;border-radius:50%;background:var(--border);border:2px solid var(--bg);transition:background .2s;}
+.block-content.active .block-dot{background:var(--accent);}
+.block-content.done .block-dot{background:var(--done);}
+.block-content.overrun .block-dot{background:var(--accent2);}
+.block-name{font-size:12px;font-weight:700;margin-bottom:2px;padding-right:72px;}
+.block-meta{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.overrun-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,71,71,.12);border:1px solid var(--accent2);padding:2px 7px;font-size:9px;color:var(--accent2);letter-spacing:1px;margin-top:3px;}
+.block-actions{position:absolute;right:8px;top:8px;display:none;gap:4px;}
+.block-content:hover .block-actions{display:flex;}
+.bact{background:var(--surface2);border:1px solid var(--border);color:var(--text);width:22px;height:22px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.bact:hover{background:var(--accent);color:#000;}
+.bact.del:hover{background:var(--accent2);color:#fff;}
+.bact.ext:hover{background:var(--accent3);color:#000;}
+.cat-work .block-content:not(.done){border-left-color:#4799ff;}
+.cat-health .block-content:not(.done){border-left-color:#47ff8a;}
+.cat-learning .block-content:not(.done){border-left-color:#ff9e47;}
+.cat-personal .block-content:not(.done){border-left-color:#b447ff;}
+.cat-rest .block-content:not(.done){border-left-color:#47e0ff;}
+.cat-work .block-dot{background:#4799ff;}.cat-health .block-dot{background:#47ff8a;}
+.cat-learning .block-dot{background:#ff9e47;}.cat-personal .block-dot{background:#b447ff;}
+.cat-rest .block-dot{background:#47e0ff;}
+.cat-tag{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.ct-work{background:#4799ff}.ct-health{background:#47ff8a}.ct-learning{background:#ff9e47}.ct-personal{background:#b447ff}.ct-rest{background:#47e0ff}
+.right-panel{display:flex;flex-direction:column;overflow-y:auto;}
+.timer-section{padding:18px;border-bottom:1px solid var(--border);background:var(--surface);}
+.timer-label{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+.timer-current{font-size:10px;color:var(--accent);margin:3px 0 0;min-height:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.timer-display{font-family:'Unbounded',sans-serif;font-size:44px;font-weight:900;letter-spacing:-2px;color:var(--accent);line-height:1;margin:6px 0 10px;font-variant-numeric:tabular-nums;transition:color .3s;}
+.timer-controls{display:flex;gap:5px;}
+.t-btn{flex:1;padding:7px 3px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .15s;text-transform:uppercase;}
+.t-btn:hover{border-color:var(--accent);color:var(--accent);}
+.t-btn.primary{background:var(--accent);color:#000;border-color:var(--accent);}
+.t-btn.primary:hover{opacity:.85;}
+.progress-section{padding:18px;border-bottom:1px solid var(--border);}
+.progress-bar-wrap{background:var(--surface2);height:3px;margin:9px 0 3px;}
+.progress-bar-fill{height:100%;background:var(--accent);transition:width .4s ease;}
+.progress-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:10px;}
+.stat-box{background:var(--surface2);border:1px solid var(--border);padding:9px;text-align:center;}
+.stat-num{font-family:'Unbounded',sans-serif;font-size:17px;font-weight:900;color:var(--accent);display:block;}
+.stat-lab{font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;display:block;}
+.current-section{padding:18px;flex:1;}
+.current-block-card{background:var(--surface2);border:1px solid var(--border);padding:13px;border-left:3px solid var(--accent);}
+.current-tag{font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.current-name{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;}
+.current-time{font-size:10px;color:var(--muted);margin-top:3px;}
+.extend-btn{margin-top:8px;width:100%;padding:7px;background:rgba(255,71,71,.1);border:1px solid var(--accent2);color:var(--accent2);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;transition:all .15s;letter-spacing:1px;}
+.extend-btn:hover{background:var(--accent2);color:#fff;}
+.notif-schedule{padding:14px 18px;border-top:1px solid var(--border);}
+.notif-upcoming{margin-top:8px;display:flex;flex-direction:column;gap:5px;}
+.notif-item{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--muted);}
+.notif-time{color:var(--accent);font-weight:700;min-width:40px;}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:300;align-items:center;justify-content:center;}
+.modal.open{display:flex;}
+.modal-card{background:var(--surface);border:1px solid var(--border);padding:26px;width:420px;max-width:93vw;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:900;margin-bottom:18px;color:var(--accent);}
+.form-group{margin-bottom:12px;}
+.form-label{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:4px;}
+.form-input,.form-select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 10px;font-family:'Space Mono',monospace;font-size:12px;outline:none;transition:border-color .2s;}
+.form-input:focus,.form-select:focus{border-color:var(--accent);}
+.form-select option{background:var(--surface2);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.form-actions{display:flex;gap:7px;margin-top:18px;}
+.repeat-options{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+.repeat-day{padding:4px 7px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;transition:all .15s;}
+.repeat-day.sel{background:var(--accent);color:#000;border-color:var(--accent);}
+.conflict-list{display:flex;flex-direction:column;gap:7px;margin:12px 0;}
+.conflict-item{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);padding:10px 12px;cursor:pointer;transition:all .15s;}
+.conflict-item:hover{border-color:var(--accent2);}
+.conflict-item.selected{border-color:var(--accent2);background:rgba(255,71,71,.08);}
+.conflict-name{font-size:12px;font-weight:700;}
+.conflict-time{font-size:10px;color:var(--muted);}
+.tmpl-list{display:flex;flex-direction:column;gap:8px;margin:14px 0;}
+.tmpl-item{background:var(--surface2);border:1px solid var(--border);padding:12px;transition:all .15s;}
+.tmpl-item:hover{border-color:var(--accent);}
+.tmpl-item-name{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;margin-bottom:3px;}
+.tmpl-item-desc{font-size:10px;color:var(--muted);}
+.tmpl-actions{display:flex;gap:6px;margin-top:8px;}
+.tmpl-save-row{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+#toastContainer{position:fixed;bottom:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:7px;}
+.toast{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);padding:11px 15px;min-width:240px;max-width:310px;animation:slideIn .3s ease forwards;}
+.toast.warn{border-left-color:var(--accent3);}
+.toast.end{border-left-color:var(--accent2);}
+.toast-title{font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px;}
+.toast.warn .toast-title{color:var(--accent3);}
+.toast.end .toast-title{color:var(--accent2);}
+.toast-body{font-size:11px;font-weight:700;}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOut{from{opacity:1}to{opacity:0;transform:translateX(30px)}}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);}
+@media(max-width:680px){main{grid-template-columns:1fr;}.right-panel{border-top:1px solid var(--border);}header{padding:10px 14px;}}
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">ДЕНЬ</div>
-  <div class="header-right">
-    <button class="hbtn" id="notifBtn" onclick="requestNotifPermission()">
-      <span id="notifIcon">🔔</span><span id="notifLabel">УВЕДОМЛЕНИЯ</span>
-    </button>
-    <div class="streak-badge">
-      <span>🔥</span>
-      <span class="streak-num" id="streakNum">0</span>
-      <span style="font-size:10px;color:var(--muted)">streak</span>
-    </div>
+  <div class="hrow">
+    <button class="hbtn" id="notifBtn" onclick="requestNotifPermission()"><span id="notifIcon">🔔</span><span id="notifLabel">УВЕДОМЛЕНИЯ</span></button>
+    <div class="streak-badge">🔥 <span class="streak-num" id="streakNum">0</span> <span style="font-size:10px;color:var(--muted)">streak</span></div>
   </div>
 </header>
 
-<!-- WEEK NAV -->
 <nav class="week-nav">
-  <button class="week-arrow" onclick="shiftWeek(-1)">‹</button>
+  <button class="week-arrow" onclick="shiftWeek(-1)">&#8249;</button>
   <div class="week-days" id="weekDays"></div>
-  <button class="week-arrow" onclick="shiftWeek(1)">›</button>
+  <button class="week-arrow" onclick="shiftWeek(1)">&#8250;</button>
 </nav>
+
+<div class="suggestions" id="sugBar">
+  <span class="sug-label">💡 ПОДСКАЗКИ</span>
+  <span id="sugChips" style="display:flex;gap:7px;"></span>
+</div>
 
 <div id="toastContainer"></div>
 
@@ -206,7 +175,10 @@
   <div class="timeline-panel">
     <div class="panel-header">
       <div class="panel-title" id="dayTitle">СЕГОДНЯ</div>
-      <button class="add-btn" onclick="openForm()">+ БЛОК</button>
+      <div class="btn-row">
+        <button class="tmpl-btn" onclick="openTemplates()">📋 ШАБЛОНЫ</button>
+        <button class="add-btn" onclick="openForm()">+ БЛОК</button>
+      </div>
     </div>
     <div id="timeline"></div>
   </div>
@@ -223,9 +195,8 @@
         <button class="t-btn" onclick="setTimer(5)">5м</button>
       </div>
     </div>
-
     <div class="progress-section">
-      <div class="panel-title">ПРОГРЕСС ДНЯ</div>
+      <div class="panel-title">ПРОГРЕСС</div>
       <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
       <div style="text-align:right;font-size:9px;color:var(--muted)" id="progressPct">0%</div>
       <div class="progress-stats">
@@ -234,12 +205,10 @@
         <div class="stat-box"><span class="stat-num" id="statTotal">0</span><span class="stat-lab">всего</span></div>
       </div>
     </div>
-
     <div class="current-section">
-      <div class="panel-title" style="margin-bottom:14px">СЕЙЧАС</div>
+      <div class="panel-title" style="margin-bottom:12px">СЕЙЧАС</div>
       <div id="currentCard"><div style="color:var(--muted);font-size:11px">Нет активных блоков</div></div>
     </div>
-
     <div class="notif-schedule">
       <div class="panel-title">БЛИЖАЙШИЕ УВЕДОМЛЕНИЯ</div>
       <div class="notif-upcoming" id="notifUpcoming"></div>
@@ -247,592 +216,623 @@
   </div>
 </main>
 
-<!-- ADD FORM -->
-<div class="add-form" id="addForm" onclick="closeFormOutside(event)">
-  <div class="form-card">
-    <div class="form-title">+ НОВЫЙ БЛОК</div>
-    <div class="form-group">
-      <label class="form-label">Название</label>
-      <input class="form-input" id="fName" placeholder="Тренировка, работа над проектом...">
-    </div>
+<!-- ADD BLOCK -->
+<div class="modal" id="addForm" onclick="closeModalOutside(event,'addForm')">
+  <div class="modal-card">
+    <div class="modal-title">+ НОВЫЙ БЛОК</div>
+    <div class="form-group"><label class="form-label">Название</label><input class="form-input" id="fName" placeholder="Тренировка, работа, обучение..."></div>
     <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Начало</label>
-        <input class="form-input" id="fStart" type="time" value="09:00">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Конец</label>
-        <input class="form-input" id="fEnd" type="time" value="10:00">
-      </div>
+      <div class="form-group"><label class="form-label">Начало</label><input class="form-input" id="fStart" type="time" value="09:00"></div>
+      <div class="form-group"><label class="form-label">Конец</label><input class="form-input" id="fEnd" type="time" value="10:00"></div>
     </div>
-    <div class="form-group">
-      <label class="form-label">Категория</label>
+    <div class="form-group"><label class="form-label">Категория</label>
       <select class="form-select" id="fCat">
-        <option value="work">💼 Работа</option>
-        <option value="health">🏃 Здоровье</option>
-        <option value="learning">📚 Обучение</option>
-        <option value="personal">✨ Личное</option>
-        <option value="rest">😴 Отдых</option>
+        <option value="work">💼 Работа</option><option value="health">🏃 Здоровье</option>
+        <option value="learning">📚 Обучение</option><option value="personal">✨ Личное</option><option value="rest">😴 Отдых</option>
       </select>
     </div>
     <div class="form-group">
-      <label class="form-label">Повторять по дням (необязательно)</label>
+      <label class="form-label">Повторять по дням</label>
       <div class="repeat-options" id="repeatDays">
-        <div class="repeat-day" data-d="1">ПН</div>
-        <div class="repeat-day" data-d="2">ВТ</div>
-        <div class="repeat-day" data-d="3">СР</div>
-        <div class="repeat-day" data-d="4">ЧТ</div>
-        <div class="repeat-day" data-d="5">ПТ</div>
-        <div class="repeat-day" data-d="6">СБ</div>
+        <div class="repeat-day" data-d="1">ПН</div><div class="repeat-day" data-d="2">ВТ</div>
+        <div class="repeat-day" data-d="3">СР</div><div class="repeat-day" data-d="4">ЧТ</div>
+        <div class="repeat-day" data-d="5">ПТ</div><div class="repeat-day" data-d="6">СБ</div>
         <div class="repeat-day" data-d="0">ВС</div>
       </div>
-      <div style="font-size:9px;color:var(--muted);margin-top:5px">Если не выбрано — блок добавится только на выбранный день</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px">Пусто = только выбранный день</div>
     </div>
     <div class="form-actions">
-      <button class="add-btn" style="flex:1;padding:11px" onclick="saveBlock()">СОХРАНИТЬ</button>
-      <button class="t-btn" style="flex:1" onclick="closeForm()">ОТМЕНА</button>
+      <button class="add-btn" style="flex:1;padding:10px" onclick="saveBlock()">СОХРАНИТЬ</button>
+      <button class="t-btn" style="flex:1" onclick="closeModal('addForm')">ОТМЕНА</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXTEND BLOCK -->
+<div class="modal" id="extendModal" onclick="closeModalOutside(event,'extendModal')">
+  <div class="modal-card">
+    <div class="modal-title">⊕ ПРОДЛИТЬ БЛОК</div>
+    <div id="extendInfo" style="font-size:12px;margin-bottom:4px;font-weight:700;"></div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:14px;">Выбери на сколько продлить:</div>
+    <div style="display:flex;gap:7px;margin-bottom:12px;" id="extendMinsBtns">
+      <button class="t-btn" onclick="setExtendMins(15)">+15м</button>
+      <button class="t-btn" onclick="setExtendMins(30)">+30м</button>
+      <button class="t-btn" onclick="setExtendMins(45)">+45м</button>
+      <button class="t-btn" onclick="setExtendMins(60)">+1ч</button>
+    </div>
+    <div id="extendMinsSelected" style="font-size:11px;color:var(--accent);min-height:16px;margin-bottom:14px;"></div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">Какой блок сократить? (необязательно)</div>
+    <div class="conflict-list" id="conflictList"></div>
+    <div id="extendNote" style="font-size:9px;color:var(--muted);margin-bottom:14px;"></div>
+    <div class="form-actions">
+      <button class="add-btn" style="flex:1;padding:10px" onclick="applyExtend()">ПРИМЕНИТЬ</button>
+      <button class="t-btn" style="flex:1" onclick="closeModal('extendModal')">ОТМЕНА</button>
+    </div>
+  </div>
+</div>
+
+<!-- TEMPLATES -->
+<div class="modal" id="templatesModal" onclick="closeModalOutside(event,'templatesModal')">
+  <div class="modal-card">
+    <div class="modal-title">📋 ШАБЛОНЫ ДНЯ</div>
+    <div class="tmpl-list" id="tmplList"></div>
+    <div class="tmpl-save-row">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">Сохранить текущий день как шаблон:</div>
+      <div style="display:flex;gap:7px;">
+        <input class="form-input" id="tmplName" placeholder="Название шаблона" style="flex:1">
+        <button class="add-btn" style="padding:8px 14px" onclick="saveTemplate()">СОХРАНИТЬ</button>
+      </div>
+    </div>
+    <div class="form-actions" style="margin-top:14px;">
+      <button class="t-btn" style="flex:1" onclick="closeModal('templatesModal')">ЗАКРЫТЬ</button>
     </div>
   </div>
 </div>
 
 <script>
-// ========== STATE ==========
-let allBlocks = JSON.parse(localStorage.getItem('allBlocks') || '{}');
-// allBlocks = { "2026-03-15": [{id, name, start, end, cat, done}, ...], ... }
+// ══════════════ STATE ══════════════
+var allBlocks  = JSON.parse(localStorage.getItem('allBlocks')  || '{}');
+var templates  = JSON.parse(localStorage.getItem('templates')  || '[]');
+var streak     = parseInt(localStorage.getItem('streak')       || '0');
+var weekOffset = 0;
+var selectedDate = todayStr();
+var timerInterval = null, timerSeconds = 25*60, timerRunning = false;
+var notified = new Set(JSON.parse(sessionStorage.getItem('notified') || '[]'));
+var dragSrcId = null;
+var extendBlockId = null, extendMins = 0, extendVictimId = null;
+var repeatSelected = new Set();
 
-let streak = parseInt(localStorage.getItem('streak') || '0');
-let weekOffset = 0; // 0 = current week
-let selectedDate = todayStr(); // "YYYY-MM-DD"
-
-// Timer
-let timerInterval = null;
-let timerSeconds = 25 * 60;
-let timerRunning = false;
-
-// Notification tracking (per session)
-// key = "blockId_dateStr_type" where type = "15start","5start","start","15end","5end","end"
-let notified = new Set(JSON.parse(sessionStorage.getItem('notified') || '[]'));
-
-// ========== DATE HELPERS ==========
-function todayStr() {
-  return dateToStr(new Date());
-}
-function dateToStr(d) {
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-}
-function strToDate(s) {
-  const [y,m,d] = s.split('-').map(Number);
-  return new Date(y, m-1, d);
-}
-function getWeekDates(offset) {
-  const today = new Date();
-  const dow = today.getDay(); // 0=Sun
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - ((dow + 6) % 7) + offset * 7);
-  const days = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    days.push(d);
-  }
+// ══════════════ DATE HELPERS ══════════════
+function todayStr(){ return dateToStr(new Date()); }
+function dateToStr(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function pad(n){ return String(n).padStart(2,'0'); }
+function strToDate(s){ var p=s.split('-').map(Number); return new Date(p[0],p[1]-1,p[2]); }
+function getWeekDates(offset){
+  var today=new Date(), dow=today.getDay(), monday=new Date(today);
+  monday.setDate(today.getDate()-((dow+6)%7)+offset*7);
+  var days=[];
+  for(var i=0;i<7;i++){ var d=new Date(monday); d.setDate(monday.getDate()+i); days.push(d); }
   return days;
 }
-function timeToMinutes(t) {
-  const [h, m] = t.split(':').map(Number);
-  return h * 60 + m;
-}
-function getNowMinutes() {
-  const n = new Date();
-  return n.getHours() * 60 + n.getMinutes();
-}
-function blocksForDate(dateStr) {
-  return allBlocks[dateStr] || [];
-}
-function saveBlocks() {
-  localStorage.setItem('allBlocks', JSON.stringify(allBlocks));
-}
+function timeToMins(t){ var p=t.split(':').map(Number); return p[0]*60+p[1]; }
+function minsToTime(m){ m=Math.max(0,Math.min(1439,m)); return pad(Math.floor(m/60))+':'+pad(m%60); }
+function nowMins(){ var n=new Date(); return n.getHours()*60+n.getMinutes(); }
+function blocksFor(ds){ return allBlocks[ds]||[]; }
+function saveBlocks(){ localStorage.setItem('allBlocks',JSON.stringify(allBlocks)); }
+function catLabel(c){ return{work:'Работа',health:'Здоровье',learning:'Обучение',personal:'Личное',rest:'Отдых'}[c]||c; }
+var DN=['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
+var MN=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
 
-// ========== INIT ==========
-function init() {
-  // Migrate old single-day data if exists
-  const old = localStorage.getItem('dayBlocks');
-  if (old && !localStorage.getItem('migrated')) {
-    const oldBlocks = JSON.parse(old);
-    if (oldBlocks.length > 0) {
-      allBlocks[todayStr()] = oldBlocks;
-      saveBlocks();
-    }
-    localStorage.setItem('migrated', '1');
+// ══════════════ INIT ══════════════
+function init(){
+  var old=localStorage.getItem('dayBlocks');
+  if(old&&!localStorage.getItem('migrated')){
+    var ob=JSON.parse(old); if(ob.length>0){ allBlocks[todayStr()]=ob; saveBlocks(); }
+    localStorage.setItem('migrated','1');
   }
-
-  // Seed demo blocks if empty
-  if (Object.keys(allBlocks).length === 0) seedDemo();
-
-  renderWeekNav();
-  renderTimeline();
-  updateStats();
-  updateCurrentBlock();
-  updateStreakDisplay();
-  updateNotifBtn();
-  renderUpcomingNotifs();
-  setInterval(tick, 20000); // check every 20s
-  setInterval(() => { renderWeekNav(); renderTimeline(); updateCurrentBlock(); renderUpcomingNotifs(); }, 60000);
+  if(!Object.keys(allBlocks).length) seedDemo();
+  renderAll();
+  setInterval(tick,20000);
+  setInterval(function(){ renderWeekNav(); renderTimeline(); updateCurrentBlock(); renderUpcomingNotifs(); renderSuggestions(); },60000);
 }
+function renderAll(){ renderWeekNav(); renderTimeline(); updateStats(); updateCurrentBlock(); updateStreakDisplay(); updateNotifBtn(); renderUpcomingNotifs(); renderSuggestions(); }
 
-function seedDemo() {
-  const demos = [
-    { name:'Утренняя зарядка', start:'07:00', end:'07:30', cat:'health' },
-    { name:'Завтрак + планирование', start:'07:30', end:'08:00', cat:'personal' },
-    { name:'Глубокая работа', start:'09:00', end:'11:00', cat:'work' },
-    { name:'Чтение / обучение', start:'11:00', end:'12:00', cat:'learning' },
-    { name:'Обед', start:'13:00', end:'13:30', cat:'personal' },
-    { name:'Работа над задачами', start:'14:00', end:'17:00', cat:'work' },
-    { name:'Спорт', start:'18:00', end:'19:00', cat:'health' },
-    { name:'Ужин + отдых', start:'19:30', end:'21:00', cat:'rest' },
-    { name:'Вечернее обучение', start:'21:00', end:'22:00', cat:'learning' },
-    { name:'Подготовка ко сну', start:'22:30', end:'23:00', cat:'rest' },
+function seedDemo(){
+  var demos=[
+    {name:'Утренняя зарядка',start:'07:00',end:'07:30',cat:'health'},
+    {name:'Завтрак + планирование',start:'07:30',end:'08:00',cat:'personal'},
+    {name:'Глубокая работа',start:'09:00',end:'11:00',cat:'work'},
+    {name:'Чтение / обучение',start:'11:00',end:'12:00',cat:'learning'},
+    {name:'Обед',start:'13:00',end:'13:30',cat:'personal'},
+    {name:'Работа над задачами',start:'14:00',end:'17:00',cat:'work'},
+    {name:'Спорт',start:'18:00',end:'19:00',cat:'health'},
+    {name:'Ужин + отдых',start:'19:30',end:'21:00',cat:'rest'},
+    {name:'Вечернее обучение',start:'21:00',end:'22:00',cat:'learning'},
+    {name:'Подготовка ко сну',start:'22:30',end:'23:00',cat:'rest'},
   ];
-  allBlocks[todayStr()] = demos.map((b,i) => ({ ...b, id: 'demo'+i, done: false }));
+  allBlocks[todayStr()]=demos.map(function(b,i){ return Object.assign({},b,{id:'demo'+i,done:false}); });
   saveBlocks();
 }
 
-// ========== WEEK NAV ==========
-const DAY_NAMES = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
-const MONTH_NAMES = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-
-function renderWeekNav() {
-  const days = getWeekDates(weekOffset);
-  const today = todayStr();
-  let html = '';
-  days.forEach(d => {
-    const ds = dateToStr(d);
-    const isToday = ds === today;
-    const isActive = ds === selectedDate;
-    const hasBlocks = (allBlocks[ds] || []).length > 0;
-    html += `<div class="day-tab${isActive?' active':''}${isToday?' today':''}${hasBlocks?' has-blocks':''}" onclick="selectDay('${ds}')">
-      <div class="day-name">${DAY_NAMES[d.getDay()]}</div>
-      <div class="day-num">${d.getDate()}</div>
-      <div class="day-dot"></div>
-    </div>`;
-  });
-  document.getElementById('weekDays').innerHTML = html;
-
-  // Week label in panel title
-  const first = days[0], last = days[6];
-  const label = first.getDate() + ' ' + MONTH_NAMES[first.getMonth()] + ' — ' + last.getDate() + ' ' + MONTH_NAMES[last.getMonth()];
-  // update day title
-  const titleEl = document.getElementById('dayTitle');
-  if (selectedDate === todayStr()) titleEl.textContent = 'СЕГОДНЯ';
-  else {
-    const sd = strToDate(selectedDate);
-    titleEl.textContent = DAY_NAMES[sd.getDay()] + ' ' + sd.getDate() + ' ' + MONTH_NAMES[sd.getMonth()];
-  }
+// ══════════════ WEEK NAV ══════════════
+function renderWeekNav(){
+  var days=getWeekDates(weekOffset), today=todayStr();
+  document.getElementById('weekDays').innerHTML=days.map(function(d){
+    var ds=dateToStr(d),isT=ds===today,isA=ds===selectedDate,hasB=(allBlocks[ds]||[]).length>0;
+    return '<div class="day-tab'+(isA?' active':'')+(isT?' today':'')+(hasB?' has-blocks':'')+'" onclick="selectDay(\''+ds+'\')">'+
+      '<div class="day-name">'+DN[d.getDay()]+'</div>'+
+      '<div class="day-num">'+d.getDate()+'</div><div class="day-dot"></div></div>';
+  }).join('');
+  var te=document.getElementById('dayTitle');
+  if(selectedDate===todayStr()) te.textContent='СЕГОДНЯ';
+  else{ var sd=strToDate(selectedDate); te.textContent=DN[sd.getDay()]+' '+sd.getDate()+' '+MN[sd.getMonth()]; }
+}
+function selectDay(ds){ selectedDate=ds; renderWeekNav(); renderTimeline(); updateStats(); updateCurrentBlock(); renderSuggestions(); }
+function shiftWeek(dir){
+  weekOffset+=dir;
+  var dates=getWeekDates(weekOffset).map(function(d){return dateToStr(d);});
+  if(dates.indexOf(selectedDate)<0) selectedDate=dates[0];
+  renderWeekNav(); renderTimeline(); updateStats(); updateCurrentBlock();
 }
 
-function selectDay(ds) {
-  selectedDate = ds;
-  renderWeekNav();
-  renderTimeline();
-  updateStats();
-  updateCurrentBlock();
-}
-
-function shiftWeek(dir) {
-  weekOffset += dir;
-  // Auto-select first day of new week if current selection not visible
-  const days = getWeekDates(weekOffset);
-  const datesInWeek = days.map(d => dateToStr(d));
-  if (!datesInWeek.includes(selectedDate)) {
-    selectedDate = datesInWeek[0];
-  }
-  renderWeekNav();
-  renderTimeline();
-  updateStats();
-  updateCurrentBlock();
-}
-
-// ========== TIMELINE ==========
-function renderTimeline() {
-  const container = document.getElementById('timeline');
-  const blocks = blocksForDate(selectedDate);
-  const isToday = selectedDate === todayStr();
-
-  if (blocks.length === 0) {
-    container.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:32px 0;text-align:center;line-height:2.2">
-      <div style="font-size:28px;margin-bottom:10px">🗓</div>
-      <div>Нет блоков на этот день</div>
-      <div style="font-size:10px;margin-top:6px">Нажми <span style="color:var(--accent)">+ БЛОК</span></div>
-    </div>`;
+// ══════════════ TIMELINE ══════════════
+function renderTimeline(){
+  var container=document.getElementById('timeline');
+  var blocks=blocksFor(selectedDate);
+  var isToday=selectedDate===todayStr();
+  if(!blocks.length){
+    container.innerHTML='<div style="color:var(--muted);font-size:12px;padding:32px 0;text-align:center;line-height:2.2"><div style="font-size:26px;margin-bottom:10px">🗓</div><div>Нет блоков на этот день</div><div style="font-size:10px;margin-top:6px">Нажми <span style="color:var(--accent)">+ БЛОК</span></div></div>';
     return;
   }
-
-  const sorted = [...blocks].sort((a, b) => a.start.localeCompare(b.start));
-  const nowMin = getNowMinutes();
-  let html = '';
-
-  sorted.forEach(b => {
-    const startMin = timeToMinutes(b.start);
-    const endMin = timeToMinutes(b.end);
-    const isActive = isToday && nowMin >= startMin && nowMin < endMin;
-    const catClass = b.done ? '' : `cat-${b.cat}`;
-    const stateClass = b.done ? 'done' : (isActive ? 'active' : '');
-    html += `<div class="time-block ${catClass}" data-id="${b.id}">
-      <div class="time-label">${b.start}</div>
-      <div class="block-content ${stateClass}">
-        <div class="block-dot"></div>
-        <div class="block-name"><span class="cat-tag ct-${b.cat}"></span>${b.name}</div>
-        <div class="block-cat">${b.start}–${b.end} · ${catLabel(b.cat)}</div>
-        <div class="block-actions">
-          <button class="block-btn" onclick="toggleDone('${b.id}',event)">${b.done?'↩':'✓'}</button>
-          <button class="block-btn del" onclick="deleteBlock('${b.id}',event)">✕</button>
-        </div>
-      </div>
-    </div>`;
-  });
-
-  container.innerHTML = html;
+  var sorted=blocks.slice().sort(function(a,b){return a.start.localeCompare(b.start);});
+  var nm=nowMins();
+  container.innerHTML=sorted.map(function(b){
+    var sm=timeToMins(b.start),em=timeToMins(b.end);
+    var isActive=isToday&&nm>=sm&&nm<em;
+    var isOverrun=isToday&&!b.done&&nm>=em;
+    var catClass=b.done?'':('cat-'+b.cat);
+    var stateClass=b.done?'done':isActive?'active':isOverrun?'overrun':'';
+    var overrunMins=isOverrun?nm-em:0;
+    var overrunBadge=isOverrun?'<div class="overrun-badge">⚠ ПЕРЕБЕГ +'+overrunMins+'м</div>':'';
+    var extBtn='<button class="bact ext" onclick="openExtend(\''+b.id+'\',event)" title="Продлить">⊕</button>';
+    return '<div class="time-block '+catClass+'" data-id="'+b.id+'" draggable="true" '+
+      'ondragstart="onDragStart(event,\''+b.id+'\')" ondragover="onDragOver(event)" '+
+      'ondrop="onDrop(event,\''+b.id+'\')" ondragend="onDragEnd(event)" ondragleave="onDragLeave(event)">'+
+      '<div class="time-label">'+b.start+'</div>'+
+      '<div class="block-content '+stateClass+'">'+
+        '<div class="block-dot"></div>'+
+        '<div class="block-name"><span class="cat-tag ct-'+b.cat+'"></span>'+b.name+'</div>'+
+        '<div class="block-meta">'+b.start+'–'+b.end+' · '+catLabel(b.cat)+'</div>'+
+        overrunBadge+
+        '<div class="block-actions">'+
+          '<button class="bact" onclick="toggleDone(\''+b.id+'\',event)">'+(b.done?'↩':'✓')+'</button>'+
+          extBtn+
+          '<button class="bact del" onclick="deleteBlock(\''+b.id+'\',event)">✕</button>'+
+        '</div>'+
+      '</div></div>';
+  }).join('');
 }
 
-function catLabel(cat) {
-  return {work:'Работа',health:'Здоровье',learning:'Обучение',personal:'Личное',rest:'Отдых'}[cat]||cat;
+// ══════════════ DRAG & DROP ══════════════
+function onDragStart(e,id){ dragSrcId=id; e.currentTarget.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; }
+function onDragEnd(e){ e.currentTarget.classList.remove('dragging'); document.querySelectorAll('.drag-over').forEach(function(el){el.classList.remove('drag-over');}); }
+function onDragOver(e){ e.preventDefault(); e.dataTransfer.dropEffect='move'; e.currentTarget.classList.add('drag-over'); return false; }
+function onDragLeave(e){ e.currentTarget.classList.remove('drag-over'); }
+function onDrop(e,targetId){
+  e.stopPropagation(); e.currentTarget.classList.remove('drag-over');
+  if(dragSrcId===targetId) return;
+  var blocks=allBlocks[selectedDate]||[];
+  var src=blocks.find(function(b){return b.id===dragSrcId;});
+  var tgt=blocks.find(function(b){return b.id===targetId;});
+  if(!src||!tgt) return;
+  var srcDur=timeToMins(src.end)-timeToMins(src.start);
+  var tgtDur=timeToMins(tgt.end)-timeToMins(tgt.start);
+  var srcOldStart=src.start, tgtOldStart=tgt.start;
+  src.start=tgtOldStart; src.end=minsToTime(timeToMins(tgtOldStart)+srcDur);
+  tgt.start=srcOldStart; tgt.end=minsToTime(timeToMins(srcOldStart)+tgtDur);
+  saveBlocks(); renderTimeline(); renderUpcomingNotifs();
+  showToast('start','↕ Перемещено',src.name+' ↔ '+tgt.name);
 }
 
-// ========== CURRENT BLOCK ==========
-function updateCurrentBlock() {
-  if (selectedDate !== todayStr()) {
-    document.getElementById('currentCard').innerHTML = `<div style="color:var(--muted);font-size:11px">Просмотр другого дня</div>`;
-    return;
-  }
-  const nowMin = getNowMinutes();
-  const blocks = blocksForDate(todayStr());
-  const active = blocks.find(b => {
-    const s = timeToMinutes(b.start), e = timeToMinutes(b.end);
-    return nowMin >= s && nowMin < e && !b.done;
-  });
-  const card = document.getElementById('currentCard');
-  if (active) {
-    const rem = timeToMinutes(active.end) - nowMin;
-    const timeLeft = rem >= 60 ? `${Math.floor(rem/60)}ч ${rem%60}м` : `${rem}м осталось`;
-    card.innerHTML = `<div class="current-block-card">
-      <div class="current-tag">АКТИВНЫЙ БЛОК</div>
-      <div class="current-name">${active.name}</div>
-      <div class="current-time">${active.start}–${active.end} · ${timeLeft}</div>
-    </div>`;
-    // Auto-set timer to remaining time if not running
-    if (!timerRunning) {
-      timerSeconds = rem * 60;
-      renderTimerDisplay();
-      document.getElementById('timerCurrent').textContent = active.name;
-    }
+// ══════════════ EXTEND BLOCK ══════════════
+function openExtend(id,e){
+  e.stopPropagation();
+  extendBlockId=id; extendMins=0; extendVictimId=null;
+  var blocks=blocksFor(selectedDate);
+  var b=blocks.find(function(x){return x.id===id;});
+  if(!b) return;
+  document.getElementById('extendInfo').textContent=b.name+' · '+b.start+'–'+b.end;
+  document.getElementById('extendMinsSelected').textContent='';
+  document.querySelectorAll('#extendMinsBtns .t-btn').forEach(function(btn){btn.classList.remove('primary');});
+  var bEnd=timeToMins(b.end);
+  var after=blocks.filter(function(x){
+    return x.id!==id&&!x.done&&timeToMins(x.start)>=bEnd-5&&timeToMins(x.start)<=bEnd+120;
+  }).sort(function(a,c){return a.start.localeCompare(c.start);});
+  var cl=document.getElementById('conflictList');
+  if(!after.length){
+    cl.innerHTML='<div style="font-size:11px;color:var(--muted)">Нет конфликтов — блок продлится свободно</div>';
+    document.getElementById('extendNote').textContent='';
   } else {
-    const next = blocks.filter(b => timeToMinutes(b.start) > nowMin && !b.done)
-      .sort((a,b) => a.start.localeCompare(b.start))[0];
-    if (next) {
-      const diff = timeToMinutes(next.start) - nowMin;
-      const timeUntil = diff >= 60 ? `через ${Math.floor(diff/60)}ч ${diff%60}м` : `через ${diff}м`;
-      card.innerHTML = `<div class="current-block-card" style="border-left-color:var(--muted)">
-        <div class="current-tag" style="color:var(--muted)">СЛЕДУЮЩИЙ</div>
-        <div class="current-name">${next.name}</div>
-        <div class="current-time">${next.start} · ${timeUntil}</div>
-      </div>`;
+    cl.innerHTML=after.map(function(a){
+      return '<div class="conflict-item" data-id="'+a.id+'" onclick="selectVictim(\''+a.id+'\',this)">'+
+        '<div><div class="conflict-name">'+a.name+'</div><div class="conflict-time">'+a.start+'–'+a.end+'</div></div>'+
+        '<div style="font-size:10px;color:var(--accent2)">сократить</div></div>';
+    }).join('');
+    document.getElementById('extendNote').textContent='Выбери блок для сокращения (необязательно)';
+  }
+  openModal('extendModal');
+}
+function setExtendMins(m){
+  extendMins=m;
+  document.getElementById('extendMinsSelected').textContent='Продление: +'+m+' минут';
+  document.querySelectorAll('#extendMinsBtns .t-btn').forEach(function(btn){
+    btn.classList.toggle('primary', btn.textContent==='+'+m+'м'||(m===60&&btn.textContent==='+1ч'));
+  });
+}
+function selectVictim(id,el){
+  extendVictimId=id;
+  document.querySelectorAll('.conflict-item').forEach(function(c){c.classList.remove('selected');});
+  el.classList.add('selected');
+}
+function applyExtend(){
+  if(!extendBlockId||!extendMins){ showToast('warn','⚠','Выбери время продления'); return; }
+  var blocks=allBlocks[selectedDate]||[];
+  var b=blocks.find(function(x){return x.id===extendBlockId;});
+  if(!b) return;
+  b.end=minsToTime(timeToMins(b.end)+extendMins);
+  if(extendVictimId){
+    var v=blocks.find(function(x){return x.id===extendVictimId;});
+    if(v){
+      var newDur=timeToMins(v.end)-timeToMins(v.start)-extendMins;
+      if(newDur<5){ showToast('warn','⚠','Блок стал бы меньше 5 минут'); return; }
+      v.start=minsToTime(timeToMins(v.start)+extendMins);
+    }
+  }
+  saveBlocks(); closeModal('extendModal'); renderTimeline(); updateCurrentBlock(); renderUpcomingNotifs();
+  showToast('start','⊕ Продлено','«'+b.name+'» теперь до '+b.end);
+}
+
+// ══════════════ CURRENT BLOCK ══════════════
+function updateCurrentBlock(){
+  if(selectedDate!==todayStr()){
+    document.getElementById('currentCard').innerHTML='<div style="color:var(--muted);font-size:11px">Просмотр другого дня</div>';
+    return;
+  }
+  var nm=nowMins(), blocks=blocksFor(todayStr());
+  var active=null;
+  for(var i=0;i<blocks.length;i++){
+    var b=blocks[i]; var s=timeToMins(b.start),en=timeToMins(b.end);
+    if(nm>=s&&nm<en&&!b.done){ active=b; break; }
+  }
+  var card=document.getElementById('currentCard');
+  if(active){
+    var rem=timeToMins(active.end)-nm;
+    var tl=rem>=60?Math.floor(rem/60)+'ч '+rem%60+'м':rem+'м';
+    card.innerHTML='<div class="current-block-card">'+
+      '<div class="current-tag">АКТИВНЫЙ БЛОК</div>'+
+      '<div class="current-name">'+active.name+'</div>'+
+      '<div class="current-time">'+active.start+'–'+active.end+' · '+tl+' осталось</div>'+
+      '<button class="extend-btn" onclick="openExtend(\''+active.id+'\',event)">⊕ ПРОДЛИТЬ БЛОК</button>'+
+      '</div>';
+    if(!timerRunning){ timerSeconds=rem*60; renderTimerDisplay(); document.getElementById('timerCurrent').textContent=active.name; }
+  } else {
+    var next=null, minDiff=9999;
+    blocks.forEach(function(b){ var d=timeToMins(b.start)-nm; if(d>0&&d<minDiff&&!b.done){minDiff=d;next=b;} });
+    if(next){
+      var diff=timeToMins(next.start)-nm;
+      card.innerHTML='<div class="current-block-card" style="border-left-color:var(--muted)">'+
+        '<div class="current-tag" style="color:var(--muted)">СЛЕДУЮЩИЙ</div>'+
+        '<div class="current-name">'+next.name+'</div>'+
+        '<div class="current-time">'+next.start+' · '+(diff>=60?'через '+Math.floor(diff/60)+'ч '+diff%60+'м':'через '+diff+'м')+'</div></div>';
     } else {
-      card.innerHTML = `<div style="color:var(--muted);font-size:11px">Блоков на сегодня больше нет</div>`;
+      card.innerHTML='<div style="color:var(--muted);font-size:11px">Блоков на сегодня больше нет ✓</div>';
     }
   }
 }
 
-// ========== STATS ==========
-function updateStats() {
-  const blocks = blocksForDate(selectedDate);
-  const total = blocks.length;
-  const done = blocks.filter(b => b.done).length;
-  const left = total - done;
-  const pct = total > 0 ? Math.round((done/total)*100) : 0;
-  document.getElementById('statDone').textContent = done;
-  document.getElementById('statLeft').textContent = left;
-  document.getElementById('statTotal').textContent = total;
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressPct').textContent = pct + '%';
-  if (pct >= 80 && selectedDate === todayStr()) {
-    const today = todayStr();
-    if (localStorage.getItem('lastStreakDate') !== today) {
-      streak++;
-      localStorage.setItem('streak', streak);
-      localStorage.setItem('lastStreakDate', today);
+// ══════════════ STATS ══════════════
+function updateStats(){
+  var blocks=blocksFor(selectedDate);
+  var total=blocks.length, done=blocks.filter(function(b){return b.done;}).length;
+  var pct=total>0?Math.round(done/total*100):0;
+  document.getElementById('statDone').textContent=done;
+  document.getElementById('statLeft').textContent=total-done;
+  document.getElementById('statTotal').textContent=total;
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('progressPct').textContent=pct+'%';
+  if(pct>=80&&selectedDate===todayStr()){
+    var t=todayStr();
+    if(localStorage.getItem('lastStreakDate')!==t){
+      streak++; localStorage.setItem('streak',streak); localStorage.setItem('lastStreakDate',t);
       updateStreakDisplay();
     }
   }
 }
-function updateStreakDisplay() { document.getElementById('streakNum').textContent = streak; }
+function updateStreakDisplay(){ document.getElementById('streakNum').textContent=streak; }
 
-// ========== BLOCK ACTIONS ==========
-function toggleDone(id, e) {
+// ══════════════ SMART SUGGESTIONS ══════════════
+function renderSuggestions(){
+  var chips=document.getElementById('sugChips');
+  var sugs=buildSuggestions();
+  if(!sugs.length){ chips.innerHTML='<span style="font-size:10px;color:var(--muted)">Всё по плану 👌</span>'; return; }
+  chips.innerHTML=sugs.map(function(s){
+    return '<div class="sug-chip" onclick="applySuggestion(\''+encodeURIComponent(s.id)+'\')">'+s.icon+' '+s.text+' <span>'+s.sub+'</span></div>';
+  }).join('');
+}
+function buildSuggestions(){
+  var sugs=[], nm=nowMins(), blocks=blocksFor(selectedDate), isToday=selectedDate===todayStr();
+  // 1. Overrun
+  if(isToday){
+    var overrun=null;
+    blocks.forEach(function(b){ if(!b.done&&nm>timeToMins(b.end)&&nm-timeToMins(b.end)<90) overrun=b; });
+    if(overrun) sugs.push({id:'overrun:'+overrun.id,icon:'⚠',text:'«'+overrun.name+'» +'+( nm-timeToMins(overrun.end))+'м',sub:'продлить?'});
+  }
+  // 2. Popular blocks not scheduled today
+  var freq={};
+  Object.keys(allBlocks).forEach(function(ds){
+    if(ds===selectedDate) return;
+    allBlocks[ds].forEach(function(b){
+      var k=b.name.toLowerCase().trim();
+      if(!freq[k]) freq[k]={name:b.name,cat:b.cat,start:b.start,end:b.end,count:0};
+      freq[k].count++;
+    });
+  });
+  var existingNames=blocks.map(function(b){return b.name.toLowerCase().trim();});
+  Object.values(freq).filter(function(f){return f.count>=2;})
+    .sort(function(a,b){return b.count-a.count;}).slice(0,2)
+    .forEach(function(f){
+      if(existingNames.indexOf(f.name.toLowerCase().trim())<0)
+        sugs.push({id:'freq:'+f.name,icon:'🔁',text:f.name,sub:'обычно в '+f.start,data:f});
+    });
+  // 3. Free gap
+  if(isToday){
+    var sorted=blocks.slice().sort(function(a,b){return a.start.localeCompare(b.start);});
+    for(var i=0;i<sorted.length-1;i++){
+      var gap=timeToMins(sorted[i+1].start)-timeToMins(sorted[i].end);
+      if(gap>=60&&timeToMins(sorted[i].end)>nm){
+        sugs.push({id:'gap:'+i,icon:'⬜',text:'Окно '+gap+'м свободно',sub:sorted[i].end+'–'+sorted[i+1].start}); break;
+      }
+    }
+  }
+  return sugs.slice(0,3);
+}
+function applySuggestion(encodedId){
+  var id=decodeURIComponent(encodedId);
+  if(id.indexOf('overrun:')==0){
+    var blockId=id.replace('overrun:','');
+    openExtend(blockId,{stopPropagation:function(){}});
+  } else if(id.indexOf('freq:')==0){
+    var sugs=buildSuggestions(); var s=null;
+    for(var i=0;i<sugs.length;i++) if(sugs[i].id===id){s=sugs[i];break;}
+    if(s&&s.data){ document.getElementById('fName').value=s.data.name; document.getElementById('fStart').value=s.data.start; document.getElementById('fEnd').value=s.data.end; document.getElementById('fCat').value=s.data.cat; openForm(); }
+  } else { openForm(); }
+}
+
+// ══════════════ BLOCK ACTIONS ══════════════
+function toggleDone(id,e){
   e.stopPropagation();
-  const blocks = allBlocks[selectedDate] || [];
-  const b = blocks.find(x => x.id === id);
-  if (b) b.done = !b.done;
-  saveBlocks(); renderTimeline(); updateStats(); updateCurrentBlock();
+  var b=(allBlocks[selectedDate]||[]).find(function(x){return x.id===id;});
+  if(b) b.done=!b.done;
+  saveBlocks(); renderTimeline(); updateStats(); updateCurrentBlock(); renderSuggestions();
 }
-function deleteBlock(id, e) {
+function deleteBlock(id,e){
   e.stopPropagation();
-  if (allBlocks[selectedDate]) allBlocks[selectedDate] = allBlocks[selectedDate].filter(x => x.id !== id);
-  saveBlocks(); renderTimeline(); updateStats(); updateCurrentBlock(); renderWeekNav(); renderUpcomingNotifs();
+  if(allBlocks[selectedDate]) allBlocks[selectedDate]=allBlocks[selectedDate].filter(function(x){return x.id!==id;});
+  saveBlocks(); renderTimeline(); updateStats(); updateCurrentBlock(); renderWeekNav(); renderUpcomingNotifs(); renderSuggestions();
 }
 
-// ========== FORM ==========
-let repeatSelected = new Set();
-
-function openForm() {
-  repeatSelected = new Set();
-  document.querySelectorAll('.repeat-day').forEach(el => el.classList.remove('sel'));
-  document.getElementById('addForm').classList.add('open');
-  document.getElementById('fName').focus();
+// ══════════════ ADD FORM ══════════════
+function openForm(){
+  repeatSelected=new Set();
+  document.querySelectorAll('.repeat-day').forEach(function(el){el.classList.remove('sel');});
+  openModal('addForm');
+  setTimeout(function(){document.getElementById('fName').focus();},100);
 }
-function closeForm() { document.getElementById('addForm').classList.remove('open'); }
-function closeFormOutside(e) { if (e.target === document.getElementById('addForm')) closeForm(); }
-
-document.querySelectorAll('.repeat-day').forEach(el => {
-  el.addEventListener('click', () => {
-    const d = parseInt(el.dataset.d);
-    if (repeatSelected.has(d)) { repeatSelected.delete(d); el.classList.remove('sel'); }
-    else { repeatSelected.add(d); el.classList.add('sel'); }
+document.querySelectorAll('.repeat-day').forEach(function(el){
+  el.addEventListener('click',function(){
+    var d=parseInt(el.dataset.d);
+    if(repeatSelected.has(d)){repeatSelected.delete(d);el.classList.remove('sel');}
+    else{repeatSelected.add(d);el.classList.add('sel');}
   });
 });
-
-function saveBlock() {
-  const name = document.getElementById('fName').value.trim();
-  const start = document.getElementById('fStart').value;
-  const end = document.getElementById('fEnd').value;
-  const cat = document.getElementById('fCat').value;
-  if (!name || !start || !end) return;
-  if (start >= end) { showToast('warn', '⚠ Ошибка', 'Начало должно быть раньше конца'); return; }
-
-  if (repeatSelected.size > 0) {
-    // Add to all matching days in next 4 weeks
-    for (let w = 0; w < 4; w++) {
-      const days = getWeekDates(w);
-      days.forEach(d => {
-        if (repeatSelected.has(d.getDay())) {
-          const ds = dateToStr(d);
-          if (!allBlocks[ds]) allBlocks[ds] = [];
-          allBlocks[ds].push({ id: Date.now().toString() + Math.random(), name, start, end, cat, done: false });
+function saveBlock(){
+  var name=document.getElementById('fName').value.trim();
+  var start=document.getElementById('fStart').value;
+  var end=document.getElementById('fEnd').value;
+  var cat=document.getElementById('fCat').value;
+  if(!name||!start||!end) return;
+  if(start>=end){ showToast('warn','⚠','Начало должно быть раньше конца'); return; }
+  if(repeatSelected.size>0){
+    for(var w=0;w<4;w++){
+      getWeekDates(w).forEach(function(d){
+        if(repeatSelected.has(d.getDay())){
+          var ds=dateToStr(d);
+          if(!allBlocks[ds]) allBlocks[ds]=[];
+          allBlocks[ds].push({id:Date.now()+Math.random()+'',name:name,start:start,end:end,cat:cat,done:false});
         }
       });
     }
-    showToast('start', '✓ Повторяющийся блок', `Добавлен на ${repeatSelected.size} дн. × 4 нед.`);
+    showToast('start','✓ Повторяющийся блок','Добавлен на '+repeatSelected.size+' дн. × 4 нед.');
   } else {
-    if (!allBlocks[selectedDate]) allBlocks[selectedDate] = [];
-    allBlocks[selectedDate].push({ id: Date.now().toString(), name, start, end, cat, done: false });
+    if(!allBlocks[selectedDate]) allBlocks[selectedDate]=[];
+    allBlocks[selectedDate].push({id:Date.now()+'',name:name,start:start,end:end,cat:cat,done:false});
   }
-
-  saveBlocks();
-  closeForm();
-  renderWeekNav();
-  renderTimeline();
-  updateStats();
-  renderUpcomingNotifs();
-  document.getElementById('fName').value = '';
+  saveBlocks(); closeModal('addForm'); renderWeekNav(); renderTimeline(); updateStats(); renderUpcomingNotifs(); renderSuggestions();
+  document.getElementById('fName').value='';
 }
 
-// ========== NOTIFICATIONS ==========
-function updateNotifBtn() {
-  const btn = document.getElementById('notifBtn');
-  const icon = document.getElementById('notifIcon');
-  const label = document.getElementById('notifLabel');
-  if (!('Notification' in window)) {
-    btn.className = 'hbtn denied'; icon.textContent = '🔕'; label.textContent = 'НЕ ПОДДЕРЖ.'; btn.onclick=null; return;
-  }
-  if (Notification.permission === 'granted') {
-    btn.className = 'hbtn on'; icon.textContent = '🔔'; label.textContent = 'ВКЛ';
-  } else if (Notification.permission === 'denied') {
-    btn.className = 'hbtn denied'; icon.textContent = '🔕'; label.textContent = 'БЛОКИРОВАНО'; btn.onclick=null;
-  } else {
-    btn.className = 'hbtn'; icon.textContent = '🔔'; label.textContent = 'УВЕДОМЛЕНИЯ';
-  }
+// ══════════════ TEMPLATES ══════════════
+var BUILTIN=[
+  {name:'Рабочий день',desc:'Работа, фокус, обеды',blocks:[
+    {name:'Утренняя зарядка',start:'07:00',end:'07:30',cat:'health'},{name:'Завтрак',start:'07:30',end:'08:00',cat:'personal'},
+    {name:'Глубокая работа',start:'09:00',end:'11:00',cat:'work'},{name:'Переписка',start:'11:00',end:'13:00',cat:'work'},
+    {name:'Обед',start:'13:00',end:'13:30',cat:'personal'},{name:'Работа 2',start:'14:00',end:'17:00',cat:'work'},
+    {name:'Спорт',start:'18:00',end:'19:00',cat:'health'},{name:'Отдых',start:'20:00',end:'22:00',cat:'rest'}
+  ]},
+  {name:'День здоровья',desc:'Спорт, питание, восстановление',blocks:[
+    {name:'Медитация',start:'07:00',end:'07:20',cat:'personal'},{name:'Тренировка',start:'07:30',end:'09:00',cat:'health'},
+    {name:'Завтрак',start:'09:00',end:'09:30',cat:'personal'},{name:'Прогулка',start:'12:00',end:'13:00',cat:'health'},
+    {name:'Обед',start:'13:00',end:'13:30',cat:'personal'},{name:'Йога',start:'18:00',end:'19:00',cat:'health'},
+    {name:'Чтение',start:'21:00',end:'22:00',cat:'learning'},{name:'Подготовка ко сну',start:'22:30',end:'23:00',cat:'rest'}
+  ]},
+  {name:'День обучения',desc:'Знания и навыки',blocks:[
+    {name:'Утро + планирование',start:'07:30',end:'08:00',cat:'personal'},{name:'Глубокое обучение',start:'08:00',end:'10:00',cat:'learning'},
+    {name:'Практика',start:'10:30',end:'12:30',cat:'learning'},{name:'Обед + прогулка',start:'13:00',end:'14:00',cat:'personal'},
+    {name:'Повторение',start:'14:00',end:'15:30',cat:'learning'},{name:'Проект',start:'16:00',end:'18:00',cat:'work'},
+    {name:'Чтение',start:'21:00',end:'22:00',cat:'learning'}
+  ]},
+];
+function openTemplates(){ renderTemplateList(); openModal('templatesModal'); }
+function renderTemplateList(){
+  var all=BUILTIN.concat(templates);
+  var el=document.getElementById('tmplList');
+  if(!all.length){el.innerHTML='<div style="color:var(--muted);font-size:11px">Нет шаблонов</div>';return;}
+  el.innerHTML=all.map(function(t,i){
+    var isCustom=i>=BUILTIN.length;
+    return '<div class="tmpl-item">'+
+      '<div class="tmpl-item-name">'+t.name+'</div>'+
+      '<div class="tmpl-item-desc">'+(t.desc||t.blocks.length+' блоков')+'</div>'+
+      '<div class="tmpl-actions">'+
+        '<button class="add-btn" style="padding:5px 12px;font-size:9px" onclick="applyTemplate('+i+')">ПРИМЕНИТЬ</button>'+
+        (isCustom?'<button class="t-btn" style="padding:5px 10px;font-size:9px" onclick="deleteTemplate('+(i-BUILTIN.length)+')">УДАЛИТЬ</button>':'')+
+      '</div></div>';
+  }).join('');
 }
-async function requestNotifPermission() {
-  if (!('Notification' in window) || Notification.permission === 'denied') return;
-  const r = await Notification.requestPermission();
-  updateNotifBtn();
-  if (r === 'granted') showToast('start', '🔔 Включено', 'Уведомления за 15м, 5м и по факту начала/конца');
+function applyTemplate(idx){
+  var all=BUILTIN.concat(templates); var t=all[idx]; if(!t) return;
+  var existing=(allBlocks[selectedDate]||[]).length;
+  if(existing>0&&!confirm('Заменить '+existing+' существующих блоков шаблоном «'+t.name+'»?')) return;
+  allBlocks[selectedDate]=t.blocks.map(function(b){return Object.assign({},b,{id:Date.now()+Math.random()+'',done:false});});
+  saveBlocks(); closeModal('templatesModal'); renderWeekNav(); renderTimeline(); updateStats(); renderSuggestions();
+  showToast('start','📋 Шаблон применён','«'+t.name+'» → '+selectedDate);
 }
-function pushNotif(title, body, type) {
-  showToast(type, title, body);
-  if ('Notification' in window && Notification.permission === 'granted') {
-    try { new Notification(title, { body, tag: title }); } catch(e){}
-  }
+function saveTemplate(){
+  var name=document.getElementById('tmplName').value.trim();
+  if(!name){showToast('warn','⚠','Введи название');return;}
+  var blocks=blocksFor(selectedDate);
+  if(!blocks.length){showToast('warn','⚠','Нет блоков для сохранения');return;}
+  templates.push({name:name,blocks:blocks.map(function(b){return{name:b.name,start:b.start,end:b.end,cat:b.cat};})});
+  localStorage.setItem('templates',JSON.stringify(templates));
+  document.getElementById('tmplName').value='';
+  renderTemplateList(); showToast('start','✓ Сохранено',name);
 }
-function notifKey(blockId, dateStr, type) { return `${blockId}_${dateStr}_${type}`; }
+function deleteTemplate(i){ templates.splice(i,1); localStorage.setItem('templates',JSON.stringify(templates)); renderTemplateList(); }
 
-// ========== TICK ==========
-function tick() {
-  const now = new Date();
-  const todayS = todayStr();
-  const nowMin = now.getHours() * 60 + now.getMinutes();
-
-  // Check today's blocks
-  const blocks = blocksForDate(todayS);
-  blocks.forEach(b => {
-    if (b.done) return;
-    const startMin = timeToMinutes(b.start);
-    const endMin = timeToMinutes(b.end);
-    const diff_start = startMin - nowMin; // minutes until start
-    const diff_end = endMin - nowMin;     // minutes until end
-
-    // Reminders BEFORE start: 15m, 5m
-    if (diff_start >= 14 && diff_start <= 15 && !notified.has(notifKey(b.id, todayS, '15start'))) {
-      notified.add(notifKey(b.id, todayS, '15start'));
-      saveNotified();
-      pushNotif('⏰ Через 15 минут: ' + b.name, b.start + '–' + b.end + ' · ' + catLabel(b.cat), 'warn');
-    }
-    if (diff_start >= 4 && diff_start <= 5 && !notified.has(notifKey(b.id, todayS, '5start'))) {
-      notified.add(notifKey(b.id, todayS, '5start'));
-      saveNotified();
-      pushNotif('⚡ Через 5 минут: ' + b.name, 'Готовься! ' + b.start + '–' + b.end, 'warn');
-    }
-    // START
-    if (diff_start >= -1 && diff_start <= 1 && !notified.has(notifKey(b.id, todayS, 'start'))) {
-      notified.add(notifKey(b.id, todayS, 'start'));
-      saveNotified();
-      pushNotif('▶ Начинается: ' + b.name, b.start + '–' + b.end + ' · ' + catLabel(b.cat), 'start');
-    }
-    // Reminders BEFORE end: 15m, 5m
-    if (diff_end >= 14 && diff_end <= 15 && !notified.has(notifKey(b.id, todayS, '15end'))) {
-      notified.add(notifKey(b.id, todayS, '15end'));
-      saveNotified();
-      pushNotif('⏰ Заканчивается через 15м: ' + b.name, 'Заверши дела, осталось немного', 'warn');
-    }
-    if (diff_end >= 4 && diff_end <= 5 && !notified.has(notifKey(b.id, todayS, '5end'))) {
-      notified.add(notifKey(b.id, todayS, '5end'));
-      saveNotified();
-      pushNotif('⚡ Заканчивается через 5м: ' + b.name, 'Почти конец блока!', 'warn');
-    }
-    // END
-    if (diff_end >= -1 && diff_end <= 1 && !notified.has(notifKey(b.id, todayS, 'end'))) {
-      notified.add(notifKey(b.id, todayS, 'end'));
-      saveNotified();
-      pushNotif('⏹ Закончился: ' + b.name, 'Отметь выполненным ✓', 'end');
-    }
-  });
-
-  renderUpcomingNotifs();
-  updateCurrentBlock();
-  if (selectedDate === todayStr()) renderTimeline();
+// ══════════════ NOTIFICATIONS ══════════════
+function updateNotifBtn(){
+  var btn=document.getElementById('notifBtn'),icon=document.getElementById('notifIcon'),label=document.getElementById('notifLabel');
+  if(!('Notification' in window)){btn.className='hbtn denied';icon.textContent='🔕';label.textContent='НЕ ПОДДЕРЖ.';btn.onclick=null;return;}
+  if(Notification.permission==='granted'){btn.className='hbtn on';icon.textContent='🔔';label.textContent='ВКЛ';}
+  else if(Notification.permission==='denied'){btn.className='hbtn denied';icon.textContent='🔕';label.textContent='БЛОКИРОВАНО';btn.onclick=null;}
+  else{btn.className='hbtn';icon.textContent='🔔';label.textContent='УВЕДОМЛЕНИЯ';}
 }
-
-function saveNotified() {
-  sessionStorage.setItem('notified', JSON.stringify([...notified]));
+async function requestNotifPermission(){
+  if(!('Notification' in window)||Notification.permission==='denied') return;
+  var r=await Notification.requestPermission(); updateNotifBtn();
+  if(r==='granted') showToast('start','🔔 Включено','Уведомления за 15м, 5м и по факту');
 }
+function pushNotif(title,body,type){
+  showToast(type,title,body);
+  if('Notification' in window&&Notification.permission==='granted'){try{new Notification(title,{body:body,tag:title});}catch(e){}}
+}
+function notifKey(id,ds,type){return id+'_'+ds+'_'+type;}
+function saveNotified(){sessionStorage.setItem('notified',JSON.stringify(Array.from(notified)));}
 
-// ========== UPCOMING NOTIFS LIST ==========
-function renderUpcomingNotifs() {
-  const nowMin = getNowMinutes();
-  const blocks = blocksForDate(todayStr());
-  const todayS = todayStr();
-  const upcoming = [];
-
-  blocks.forEach(b => {
-    if (b.done) return;
-    const sm = timeToMinutes(b.start);
-    const em = timeToMinutes(b.end);
-    const pairs = [
-      { min: sm - 15, label: '−15м', type: '15start', name: b.name },
-      { min: sm - 5,  label: '−5м',  type: '5start',  name: b.name },
-      { min: sm,      label: 'СТАРТ',type: 'start',    name: b.name },
-      { min: em - 15, label: '−15м', type: '15end',   name: b.name + ' (конец)' },
-      { min: em - 5,  label: '−5м',  type: '5end',    name: b.name + ' (конец)' },
-      { min: em,      label: 'КОНЕЦ',type: 'end',      name: b.name },
+function tick(){
+  var todayS=todayStr(), nm=nowMins();
+  blocksFor(todayS).forEach(function(b){
+    if(b.done) return;
+    var sm=timeToMins(b.start), em=timeToMins(b.end);
+    var ds=sm-nm, de=em-nm;
+    var checks=[
+      [14,15,'15start','⏰ Через 15м: '+b.name,b.start+'–'+b.end,'warn'],
+      [4,5,'5start','⚡ Через 5м: '+b.name,'Готовься! '+b.start,'warn'],
+      [-1,1,'start','▶ Начинается: '+b.name,b.start+'–'+b.end+' · '+catLabel(b.cat),'start'],
+      [14,15,'15end','⏰ Конец через 15м: '+b.name,'Завершай дела','warn'],
+      [4,5,'5end','⚡ Конец через 5м: '+b.name,'Финишная прямая!','warn'],
+      [-1,1,'end','⏹ Закончился: '+b.name,'Отметь выполненным ✓','end'],
     ];
-    pairs.forEach(p => {
-      if (p.min > nowMin && !notified.has(notifKey(b.id, todayS, p.type))) {
-        upcoming.push({ ...p, timeStr: minToTime(p.min) });
+    checks.forEach(function(c){
+      var diff=c[2].indexOf('end')>=0?de:ds;
+      if(diff>=c[0]&&diff<=c[1]&&!notified.has(notifKey(b.id,todayS,c[2]))){
+        notified.add(notifKey(b.id,todayS,c[2])); saveNotified(); pushNotif(c[3],c[4],c[5]);
       }
     });
   });
-
-  upcoming.sort((a,b) => a.min - b.min);
-  const top5 = upcoming.slice(0, 5);
-
-  const el = document.getElementById('notifUpcoming');
-  if (top5.length === 0) {
-    el.innerHTML = `<div class="notif-item"><span style="color:var(--muted);font-size:10px">На сегодня всё</span></div>`;
-    return;
-  }
-  el.innerHTML = top5.map(n => `<div class="notif-item">
-    <span class="notif-time">${n.timeStr}</span>
-    <span class="notif-type" style="color:${n.type==='end'?'var(--accent2)':n.type==='start'?'var(--done)':'#ff9e47'}">${n.label}</span>
-    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.name}</span>
-  </div>`).join('');
+  renderUpcomingNotifs(); updateCurrentBlock(); renderSuggestions();
+  if(selectedDate===todayStr()) renderTimeline();
 }
 
-function minToTime(m) {
-  m = Math.max(0, Math.min(1439, m));
-  return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0');
+function renderUpcomingNotifs(){
+  var nm=nowMins(), todayS=todayStr(), upcoming=[];
+  blocksFor(todayS).forEach(function(b){
+    if(b.done) return;
+    var sm=timeToMins(b.start), em=timeToMins(b.end);
+    [{m:sm-15,l:'−15м',t:'15start',n:b.name},{m:sm-5,l:'−5м',t:'5start',n:b.name},
+     {m:sm,l:'СТАРТ',t:'start',n:b.name},{m:em-15,l:'−15м',t:'15end',n:b.name+' (кон.)'},
+     {m:em-5,l:'−5м',t:'5end',n:b.name+' (кон.)'},{m:em,l:'КОНЕЦ',t:'end',n:b.name}]
+    .forEach(function(p){ if(p.m>nm&&!notified.has(notifKey(b.id,todayS,p.t))) upcoming.push(Object.assign({},p,{ts:minsToTime(p.m)})); });
+  });
+  upcoming.sort(function(a,b){return a.m-b.m;});
+  var el=document.getElementById('notifUpcoming'), top=upcoming.slice(0,5);
+  if(!top.length){el.innerHTML='<div class="notif-item"><span style="font-size:10px">На сегодня всё ✓</span></div>';return;}
+  el.innerHTML=top.map(function(n){
+    var col=n.t==='end'?'var(--accent2)':n.t==='start'?'var(--done)':'var(--accent3)';
+    return '<div class="notif-item"><span class="notif-time">'+n.ts+'</span>'+
+      '<span style="color:'+col+';font-size:9px;min-width:40px">'+n.l+'</span>'+
+      '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+n.n+'</span></div>';
+  }).join('');
 }
 
-// ========== TOAST ==========
-function showToast(type, title, body) {
-  const c = document.getElementById('toastContainer');
-  const t = document.createElement('div');
-  t.className = 'toast' + (type==='end'?' end':type==='warn'?' warn':'');
-  t.innerHTML = '<div class="toast-title">'+title+'</div><div class="toast-body">'+body+'</div>';
+// ══════════════ TOAST ══════════════
+function showToast(type,title,body){
+  var c=document.getElementById('toastContainer');
+  var t=document.createElement('div');
+  t.className='toast'+(type==='end'?' end':type==='warn'?' warn':'');
+  t.innerHTML='<div class="toast-title">'+title+'</div><div class="toast-body">'+body+'</div>';
   c.appendChild(t);
-  setTimeout(() => {
-    t.style.animation = 'slideOut 0.3s ease forwards';
-    setTimeout(() => t.remove(), 300);
-  }, 5000);
+  setTimeout(function(){ t.style.animation='slideOut .3s ease forwards'; setTimeout(function(){t.remove();},300); },5000);
 }
 
-// ========== TIMER ==========
-function toggleTimer() {
-  if (timerRunning) {
-    clearInterval(timerInterval); timerRunning = false;
-    document.getElementById('timerStartBtn').textContent = 'СТАРТ';
-    document.getElementById('timerStartBtn').className = 't-btn primary';
+// ══════════════ TIMER ══════════════
+function toggleTimer(){
+  if(timerRunning){
+    clearInterval(timerInterval); timerRunning=false;
+    document.getElementById('timerStartBtn').textContent='СТАРТ';
+    document.getElementById('timerStartBtn').className='t-btn primary';
   } else {
-    timerRunning = true;
-    document.getElementById('timerStartBtn').textContent = 'ПАУЗА';
-    document.getElementById('timerStartBtn').className = 't-btn';
-    timerInterval = setInterval(() => {
-      if (timerSeconds <= 0) {
-        clearInterval(timerInterval); timerRunning = false;
-        document.getElementById('timerStartBtn').textContent = 'СТАРТ';
-        document.getElementById('timerStartBtn').className = 't-btn primary';
-        document.getElementById('timerDisplay').style.color = 'var(--done)';
-        pushNotif('⏱ Таймер завершён', 'Время вышло!', 'end');
-        setTimeout(() => { document.getElementById('timerDisplay').style.color = 'var(--accent)'; }, 3000);
+    timerRunning=true;
+    document.getElementById('timerStartBtn').textContent='ПАУЗА';
+    document.getElementById('timerStartBtn').className='t-btn';
+    timerInterval=setInterval(function(){
+      if(timerSeconds<=0){
+        clearInterval(timerInterval); timerRunning=false;
+        document.getElementById('timerStartBtn').textContent='СТАРТ';
+        document.getElementById('timerStartBtn').className='t-btn primary';
+        document.getElementById('timerDisplay').style.color='var(--done)';
+        pushNotif('⏱ Таймер завершён','Время вышло!','end');
+        setTimeout(function(){document.getElementById('timerDisplay').style.color='var(--accent)';},3000);
         return;
       }
       timerSeconds--; renderTimerDisplay();
-    }, 1000);
+    },1000);
   }
 }
-function resetTimer() {
-  clearInterval(timerInterval); timerRunning = false; timerSeconds = 25*60;
-  document.getElementById('timerStartBtn').textContent = 'СТАРТ';
-  document.getElementById('timerStartBtn').className = 't-btn primary';
-  renderTimerDisplay();
-}
-function setTimer(m) {
-  clearInterval(timerInterval); timerRunning = false; timerSeconds = m*60;
-  document.getElementById('timerStartBtn').textContent = 'СТАРТ';
-  document.getElementById('timerStartBtn').className = 't-btn primary';
-  renderTimerDisplay();
-}
-function renderTimerDisplay() {
-  const m = Math.floor(timerSeconds/60).toString().padStart(2,'0');
-  const s = (timerSeconds%60).toString().padStart(2,'0');
-  document.getElementById('timerDisplay').textContent = m+':'+s;
-}
-function renderTimer() { renderTimerDisplay(); }
+function resetTimer(){ clearInterval(timerInterval); timerRunning=false; timerSeconds=25*60; document.getElementById('timerStartBtn').textContent='СТАРТ'; document.getElementById('timerStartBtn').className='t-btn primary'; renderTimerDisplay(); }
+function setTimer(m){ clearInterval(timerInterval); timerRunning=false; timerSeconds=m*60; document.getElementById('timerStartBtn').textContent='СТАРТ'; document.getElementById('timerStartBtn').className='t-btn primary'; renderTimerDisplay(); }
+function renderTimerDisplay(){ document.getElementById('timerDisplay').textContent=pad(Math.floor(timerSeconds/60))+':'+pad(timerSeconds%60); }
 
-// ========== KEYBOARD ==========
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeForm();
-  if (e.key === 'Enter' && document.getElementById('addForm').classList.contains('open')) saveBlock();
+// ══════════════ MODAL HELPERS ══════════════
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function closeModalOutside(e,id){ if(e.target===document.getElementById(id)) closeModal(id); }
+
+// ══════════════ KEYBOARD ══════════════
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape') ['addForm','extendModal','templatesModal'].forEach(closeModal);
+  if(e.key==='Enter'&&document.getElementById('addForm').classList.contains('open')) saveBlock();
 });
 
-// ========== START ==========
 init();
 </script>
 </body>
