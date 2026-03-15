@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ДЕНЬ — Планировщик Дисциплины</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #222222;
+    --accent: #e8ff47;
+    --accent2: #ff4747;
+    --text: #f0f0f0;
+    --muted: #555;
+    --done: #47ff8a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: -1px;
+    color: var(--accent);
+  }
+
+  .date-display {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .streak-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .streak-badge:hover { border-color: var(--accent); }
+
+  .notif-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .notif-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .notif-btn.granted { color: var(--done); border-color: var(--done); }
+  .notif-btn.denied { color: var(--accent2); border-color: var(--accent2); cursor: not-allowed; }
+
+  /* TOAST */
+  #toastContainer {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+  }
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    min-width: 280px;
+    max-width: 340px;
+    animation: slideIn 0.3s ease forwards;
+    pointer-events: all;
+  }
+  .toast.end { border-left-color: var(--accent2); }
+  .toast-title { font-size: 11px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+  .toast.end .toast-title { color: var(--accent2); }
+  .toast-body { font-size: 13px; font-weight: 700; }
+  .toast-sub { font-size: 10px; color: var(--muted); margin-top: 3px; }
+  @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+  .streak-num {
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 900;
+    font-size: 18px;
+    color: var(--accent);
+  }
+
+  /* MAIN LAYOUT */
+  main {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 0;
+    min-height: calc(100vh - 65px);
+  }
+
+  /* LEFT: TIMELINE */
+  .timeline-panel {
+    border-right: 1px solid var(--border);
+    padding: 32px;
+  }
+
+  .panel-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .add-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 6px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: opacity 0.15s;
+  }
+  .add-btn:hover { opacity: 0.8; }
+
+  /* TIME BLOCK */
+  .time-block {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 0 16px;
+    margin-bottom: 4px;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .time-label {
+    font-size: 11px;
+    color: var(--muted);
+    padding-top: 14px;
+    text-align: right;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  .block-content {
+    border-left: 2px solid var(--border);
+    padding: 12px 16px;
+    position: relative;
+    min-height: 50px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .block-content:hover { background: var(--surface); }
+
+  .block-content.active {
+    border-left-color: var(--accent);
+    background: rgba(232, 255, 71, 0.04);
+  }
+
+  .block-content.done {
+    border-left-color: var(--done);
+    opacity: 0.6;
+  }
+
+  .block-content.done .block-name { text-decoration: line-through; }
+
+  .block-dot {
+    position: absolute;
+    left: -5px;
+    top: 16px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--bg);
+    transition: background 0.2s;
+  }
+  .block-content.active .block-dot { background: var(--accent); }
+  .block-content.done .block-dot { background: var(--done); }
+
+  .block-name {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .block-cat {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .block-actions {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    display: none;
+    gap: 6px;
+  }
+  .block-content:hover .block-actions { display: flex; }
+
+  .block-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+  .block-btn:hover { background: var(--accent); color: #000; }
+  .block-btn.del:hover { background: var(--accent2); }
+
+  /* Empty slot */
+  .empty-slot {
+    color: var(--muted);
+    font-size: 11px;
+    font-style: italic;
+  }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* TIMER */
+  .timer-section {
+    padding: 28px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .timer-display {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 52px;
+    font-weight: 900;
+    letter-spacing: -3px;
+    color: var(--accent);
+    line-height: 1;
+    margin: 12px 0 16px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timer-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+
+  .timer-controls { display: flex; gap: 8px; }
+
+  .t-btn {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .t-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .t-btn.primary { background: var(--accent); color: #000; border-color: var(--accent); }
+  .t-btn.primary:hover { opacity: 0.85; }
+
+  /* PROGRESS */
+  .progress-section {
+    padding: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .progress-bar-wrap {
+    background: var(--surface2);
+    height: 4px;
+    margin: 12px 0 6px;
+    position: relative;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.4s ease;
+  }
+
+  .progress-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .stat-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--accent);
+    display: block;
+  }
+  .stat-lab { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; display: block; }
+
+  /* CURRENT BLOCK DISPLAY */
+  .current-section {
+    padding: 24px;
+    flex: 1;
+  }
+
+  .current-block-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-left: 3px solid var(--accent);
+  }
+
+  .current-tag { font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+  .current-name { font-family: 'Unbounded', sans-serif; font-size: 16px; font-weight: 700; }
+  .current-time { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ADD FORM */
+  .add-form {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .add-form.open { display: flex; }
+
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 32px;
+    width: 420px;
+    max-width: 90vw;
+  }
+
+  .form-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 16px;
+    font-weight: 900;
+    margin-bottom: 24px;
+    color: var(--accent);
+  }
+
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; display: block; margin-bottom: 6px; }
+
+  .form-input, .form-select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--accent); }
+  .form-select option { background: var(--surface2); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .form-actions { display: flex; gap: 10px; margin-top: 24px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* CURRENT TIME INDICATOR */
+  .now-line {
+    position: absolute;
+    left: -2px;
+    right: 0;
+    height: 2px;
+    background: var(--accent2);
+    z-index: 10;
+  }
+  .now-pip {
+    position: absolute;
+    left: -5px;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent2);
+  }
+
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+  .now-pip { animation: pulse 2s infinite; }
+
+  /* CATEGORY COLORS */
+  .cat-work .block-content { border-left-color: #4799ff; }
+  .cat-health .block-content { border-left-color: #47ff8a; }
+  .cat-learning .block-content { border-left-color: #ff9e47; }
+  .cat-personal .block-content { border-left-color: #b447ff; }
+  .cat-rest .block-content { border-left-color: #47e0ff; }
+
+  .cat-work .block-dot { background: #4799ff; }
+  .cat-health .block-dot { background: #47ff8a; }
+  .cat-learning .block-dot { background: #ff9e47; }
+  .cat-personal .block-dot { background: #b447ff; }
+  .cat-rest .block-dot { background: #47e0ff; }
+
+  .cat-tag { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+  .ct-work { background: #4799ff; }
+  .ct-health { background: #47ff8a; }
+  .ct-learning { background: #ff9e47; }
+  .ct-personal { background: #b447ff; }
+  .ct-rest { background: #47e0ff; }
+
+
+  /* TOAST */
+  #toastContainer {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    min-width: 260px;
+    max-width: 340px;
+    animation: slideIn 0.3s ease forwards;
+  }
+  .toast.end { border-left-color: var(--accent2); }
+  .toast-title { font-size: 11px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+  .toast.end .toast-title { color: var(--accent2); }
+  .toast-body { font-size: 13px; font-weight: 700; }
+  @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+
+  .notif-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .notif-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .notif-btn.granted { color: var(--done); border-color: var(--done); }
+  .notif-btn.denied { color: var(--accent2); border-color: var(--accent2); cursor: not-allowed; }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">ДЕНЬ</div>
+  <div class="date-display" id="dateDisplay"></div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="notif-btn" id="notifBtn" onclick="requestNotifPermission()">
+      <span id="notifIcon">🔔</span>
+      <span id="notifLabel">УВЕДОМЛЕНИЯ</span>
+    </button>
+    <div class="streak-badge" title="Streak — дни подряд с выполнением 80%+">
+      <span>🔥</span>
+      <span class="streak-num" id="streakNum">0</span>
+      <span style="font-size:11px;color:var(--muted)">streak</span>
+    </div>
+  </div>
+</header>
+
+<div id="toastContainer"></div>
+
+<main>
+  <!-- TIMELINE -->
+  <div class="timeline-panel">
+    <div class="panel-title">
+      РАСПИСАНИЕ
+      <button class="add-btn" onclick="openForm()">+ БЛОК</button>
+    </div>
+    <div id="timeline" style="position:relative"></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <!-- TIMER -->
+    <div class="timer-section">
+      <div class="timer-label">ТАЙМЕР БЛОКА</div>
+      <div class="timer-display" id="timerDisplay">25:00</div>
+      <div class="timer-controls">
+        <button class="t-btn primary" id="timerStartBtn" onclick="toggleTimer()">СТАРТ</button>
+        <button class="t-btn" onclick="resetTimer()">СБРОС</button>
+        <button class="t-btn" onclick="setTimer(25)">25м</button>
+        <button class="t-btn" onclick="setTimer(5)">5м</button>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="progress-section">
+      <div class="panel-title" style="margin-bottom:0">ПРОГРЕСС ДНЯ</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div style="text-align:right;font-size:10px;color:var(--muted)" id="progressPct">0%</div>
+      <div class="progress-stats">
+        <div class="stat-box">
+          <span class="stat-num" id="statDone">0</span>
+          <span class="stat-lab">сделано</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-num" id="statLeft">0</span>
+          <span class="stat-lab">осталось</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-num" id="statTotal">0</span>
+          <span class="stat-lab">всего</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CURRENT -->
+    <div class="current-section">
+      <div class="panel-title" style="margin-bottom:16px">СЕЙЧАС</div>
+      <div id="currentCard">
+        <div style="color:var(--muted);font-size:12px">Нет активных блоков</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ADD FORM -->
+<div class="add-form" id="addForm" onclick="closeFormOutside(event)">
+  <div class="form-card">
+    <div class="form-title">+ НОВЫЙ БЛОК</div>
+
+    <div class="form-group">
+      <label class="form-label">Название</label>
+      <input class="form-input" id="fName" placeholder="Тренировка, работа над проектом...">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Начало</label>
+        <input class="form-input" id="fStart" type="time" value="09:00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Конец</label>
+        <input class="form-input" id="fEnd" type="time" value="10:00">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Категория</label>
+      <select class="form-select" id="fCat">
+        <option value="work">💼 Работа</option>
+        <option value="health">🏃 Здоровье</option>
+        <option value="learning">📚 Обучение</option>
+        <option value="personal">✨ Личное</option>
+        <option value="rest">😴 Отдых</option>
+      </select>
+    </div>
+
+    <div class="form-actions">
+      <button class="add-btn" style="flex:1;padding:12px" onclick="saveBlock()">СОХРАНИТЬ</button>
+      <button class="t-btn" style="flex:1" onclick="closeForm()">ОТМЕНА</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+let blocks = JSON.parse(localStorage.getItem('dayBlocks') || '[]');
+let streak = parseInt(localStorage.getItem('streak') || '0');
+let lastDate = localStorage.getItem('lastDate') || '';
+
+// Timer
+let timerInterval = null;
+let timerSeconds = 25 * 60;
+let timerRunning = false;
+
+// Notification tracking
+let notifiedStart = new Set(JSON.parse(sessionStorage.getItem('notifiedStart') || '[]'));
+let notifiedEnd   = new Set(JSON.parse(sessionStorage.getItem('notifiedEnd')   || '[]'));
+
+// ===== INIT =====
+function init() {
+  updateDateDisplay();
+  checkStreak();
+  renderTimeline();
+  updateStats();
+  updateCurrentBlock();
+  updateStreakDisplay();
+  updateNotifBtn();
+  setInterval(tick, 30000);
+  setInterval(updateDateDisplay, 60000);
+}
+
+// ===== NOTIFICATION SYSTEM =====
+function updateNotifBtn() {
+  const btn = document.getElementById('notifBtn');
+  const icon = document.getElementById('notifIcon');
+  const label = document.getElementById('notifLabel');
+  if (!('Notification' in window)) {
+    btn.className = 'notif-btn denied';
+    icon.textContent = '🔕';
+    label.textContent = 'НЕ ПОДДЕРЖ.';
+    btn.onclick = null;
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    btn.className = 'notif-btn granted';
+    icon.textContent = '🔔';
+    label.textContent = 'ВКЛ';
+  } else if (Notification.permission === 'denied') {
+    btn.className = 'notif-btn denied';
+    icon.textContent = '🔕';
+    label.textContent = 'БЛОКИРОВАНО';
+    btn.onclick = null;
+  } else {
+    btn.className = 'notif-btn';
+    icon.textContent = '🔔';
+    label.textContent = 'УВЕДОМЛЕНИЯ';
+  }
+}
+
+async function requestNotifPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'denied') return;
+  const result = await Notification.requestPermission();
+  updateNotifBtn();
+  if (result === 'granted') {
+    showToast('start', '🔔 Уведомления включены', 'Ты получишь сигнал о начале и конце каждого блока');
+  }
+}
+
+function sendNotification(title, body, type) {
+  showToast(type, title, body);
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try { new Notification(title, { body, tag: title }); } catch(e) {}
+  }
+}
+
+function showToast(type, title, sub) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast' + (type === 'end' ? ' end' : '');
+  toast.innerHTML = '<div class="toast-title">' + title + '</div><div class="toast-body">' + sub + '</div>';
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s ease forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 5000);
+}
+
+// ===== TICK — every 30s =====
+function tick() {
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  blocks.forEach(b => {
+    if (b.done) return;
+    const startMin = timeToMinutes(b.start);
+    const endMin   = timeToMinutes(b.end);
+    if (!notifiedStart.has(b.id) && Math.abs(nowMin - startMin) <= 1) {
+      notifiedStart.add(b.id);
+      sessionStorage.setItem('notifiedStart', JSON.stringify([...notifiedStart]));
+      sendNotification('▶ Начинается: ' + b.name, b.start + ' — ' + b.end + ' · ' + catLabel(b.cat), 'start');
+    }
+    if (!notifiedEnd.has(b.id) && Math.abs(nowMin - endMin) <= 1) {
+      notifiedEnd.add(b.id);
+      sessionStorage.setItem('notifiedEnd', JSON.stringify([...notifiedEnd]));
+      sendNotification('⏹ Закончился: ' + b.name, 'Блок завершён. Отметь его выполненным ✓', 'end');
+    }
+  });
+  updateCurrentBlock();
+  renderTimeline();
+}
+
+function updateDateDisplay() {
+  const now = new Date();
+  const days = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
+  const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  document.getElementById('dateDisplay').textContent =
+    `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]}`;
+}
+
+function checkStreak() {
+  const today = new Date().toDateString();
+  if (lastDate !== today) {
+    // New day — check if yesterday was completed well
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (lastDate === yesterday.toDateString()) {
+      // Streak maintained by previous session's completion — keep it
+    } else if (lastDate !== '' && lastDate !== today) {
+      streak = 0; // Missed a day
+    }
+    localStorage.setItem('lastDate', today);
+    localStorage.setItem('streak', streak);
+    lastDate = today;
+  }
+}
+
+// ===== TIMELINE =====
+function renderTimeline() {
+  const container = document.getElementById('timeline');
+  if (blocks.length === 0) {
+    container.innerHTML = `
+      <div style="color:var(--muted);font-size:13px;padding:40px 0;text-align:center;line-height:2">
+        <div style="font-size:32px;margin-bottom:12px">🗓</div>
+        <div>Расписание пустое.</div>
+        <div style="font-size:11px;margin-top:8px">Нажми <span style="color:var(--accent)">+ БЛОК</span> чтобы начать</div>
+      </div>`;
+    return;
+  }
+
+  const sorted = [...blocks].sort((a, b) => a.start.localeCompare(b.start));
+  const nowMinutes = getNowMinutes();
+
+  let html = '';
+
+  sorted.forEach((b, i) => {
+    const startMin = timeToMinutes(b.start);
+    const endMin = timeToMinutes(b.end);
+    const isActive = nowMinutes >= startMin && nowMinutes < endMin;
+    const isDone = b.done;
+
+    const catClass = isDone ? '' : `cat-${b.cat}`;
+    const stateClass = isDone ? 'done' : (isActive ? 'active' : '');
+
+    const catColors = { work:'#4799ff', health:'#47ff8a', learning:'#ff9e47', personal:'#b447ff', rest:'#47e0ff' };
+    const color = catColors[b.cat] || '#fff';
+
+    html += `
+    <div class="time-block ${catClass}" data-id="${b.id}">
+      <div class="time-label">${b.start}</div>
+      <div class="block-content ${stateClass}">
+        <div class="block-dot"></div>
+        <div class="block-name">
+          <span class="cat-tag ct-${b.cat}"></span>${b.name}
+        </div>
+        <div class="block-cat">${b.start} — ${b.end} · ${catLabel(b.cat)}</div>
+        <div class="block-actions">
+          <button class="block-btn" onclick="toggleDone('${b.id}',event)" title="${isDone ? 'Отметить как несделанное' : 'Отметить как выполненное'}">
+            ${isDone ? '↩' : '✓'}
+          </button>
+          <button class="block-btn del" onclick="deleteBlock('${b.id}',event)" title="Удалить">✕</button>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function catLabel(cat) {
+  const labels = { work:'Работа', health:'Здоровье', learning:'Обучение', personal:'Личное', rest:'Отдых' };
+  return labels[cat] || cat;
+}
+
+function timeToMinutes(t) {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function getNowMinutes() {
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
+}
+
+// ===== CURRENT BLOCK =====
+function updateCurrentBlock() {
+  const nowMin = getNowMinutes();
+  const active = blocks.find(b => {
+    const s = timeToMinutes(b.start), e = timeToMinutes(b.end);
+    return nowMin >= s && nowMin < e && !b.done;
+  });
+
+  const card = document.getElementById('currentCard');
+  if (active) {
+    const endMin = timeToMinutes(active.end);
+    const remaining = endMin - nowMin;
+    const h = Math.floor(remaining / 60);
+    const m = remaining % 60;
+    const timeLeft = h > 0 ? `${h}ч ${m}м осталось` : `${m}м осталось`;
+    card.innerHTML = `
+      <div class="current-block-card">
+        <div class="current-tag">АКТИВНЫЙ БЛОК</div>
+        <div class="current-name">${active.name}</div>
+        <div class="current-time">${active.start} — ${active.end} · ${timeLeft}</div>
+      </div>`;
+  } else {
+    const next = blocks
+      .filter(b => timeToMinutes(b.start) > nowMin && !b.done)
+      .sort((a, b) => a.start.localeCompare(b.start))[0];
+
+    if (next) {
+      const startMin = timeToMinutes(next.start);
+      const diff = startMin - nowMin;
+      const h = Math.floor(diff / 60);
+      const m = diff % 60;
+      const timeUntil = h > 0 ? `через ${h}ч ${m}м` : `через ${m}м`;
+      card.innerHTML = `
+        <div class="current-block-card" style="border-left-color: var(--muted);">
+          <div class="current-tag" style="color:var(--muted)">СЛЕДУЮЩИЙ</div>
+          <div class="current-name">${next.name}</div>
+          <div class="current-time">${next.start} · ${timeUntil}</div>
+        </div>`;
+    } else {
+      card.innerHTML = `<div style="color:var(--muted);font-size:12px">Нет активных блоков</div>`;
+    }
+  }
+}
+
+// ===== STATS =====
+function updateStats() {
+  const total = blocks.length;
+  const done = blocks.filter(b => b.done).length;
+  const left = total - done;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statLeft').textContent = left;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+
+  // Update streak if day completed 80%+
+  if (pct >= 80) {
+    const today = new Date().toDateString();
+    if (localStorage.getItem('lastStreakDate') !== today) {
+      streak++;
+      localStorage.setItem('streak', streak);
+      localStorage.setItem('lastStreakDate', today);
+      updateStreakDisplay();
+    }
+  }
+}
+
+function updateStreakDisplay() {
+  document.getElementById('streakNum').textContent = streak;
+}
+
+// ===== BLOCK ACTIONS =====
+function toggleDone(id, e) {
+  e.stopPropagation();
+  const b = blocks.find(x => x.id === id);
+  if (b) b.done = !b.done;
+  save();
+  renderTimeline();
+  updateStats();
+  updateCurrentBlock();
+}
+
+function deleteBlock(id, e) {
+  e.stopPropagation();
+  blocks = blocks.filter(x => x.id !== id);
+  save();
+  renderTimeline();
+  updateStats();
+  updateCurrentBlock();
+}
+
+// ===== FORM =====
+function openForm() {
+  document.getElementById('addForm').classList.add('open');
+  document.getElementById('fName').focus();
+}
+
+function closeForm() {
+  document.getElementById('addForm').classList.remove('open');
+}
+
+function closeFormOutside(e) {
+  if (e.target === document.getElementById('addForm')) closeForm();
+}
+
+function saveBlock() {
+  const name = document.getElementById('fName').value.trim();
+  const start = document.getElementById('fStart').value;
+  const end = document.getElementById('fEnd').value;
+  const cat = document.getElementById('fCat').value;
+
+  if (!name || !start || !end) return;
+  if (start >= end) { alert('Начало должно быть раньше конца'); return; }
+
+  blocks.push({
+    id: Date.now().toString(),
+    name, start, end, cat, done: false
+  });
+
+  save();
+  closeForm();
+  renderTimeline();
+  updateStats();
+  document.getElementById('fName').value = '';
+}
+
+function save() {
+  localStorage.setItem('dayBlocks', JSON.stringify(blocks));
+}
+
+// ===== TIMER =====
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timerStartBtn').textContent = 'СТАРТ';
+    document.getElementById('timerStartBtn').className = 't-btn primary';
+  } else {
+    timerRunning = true;
+    document.getElementById('timerStartBtn').textContent = 'ПАУЗА';
+    document.getElementById('timerStartBtn').className = 't-btn';
+    timerInterval = setInterval(() => {
+      if (timerSeconds <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        document.getElementById('timerStartBtn').textContent = 'СТАРТ';
+        document.getElementById('timerStartBtn').className = 't-btn primary';
+        // Flash notification
+        document.getElementById('timerDisplay').style.color = '#47ff8a';
+        setTimeout(() => {
+          document.getElementById('timerDisplay').style.color = 'var(--accent)';
+        }, 2000);
+        return;
+      }
+      timerSeconds--;
+      renderTimer();
+    }, 1000);
+  }
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = 25 * 60;
+  document.getElementById('timerStartBtn').textContent = 'СТАРТ';
+  document.getElementById('timerStartBtn').className = 't-btn primary';
+  renderTimer();
+}
+
+function setTimer(mins) {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = mins * 60;
+  document.getElementById('timerStartBtn').textContent = 'СТАРТ';
+  document.getElementById('timerStartBtn').className = 't-btn primary';
+  renderTimer();
+}
+
+function renderTimer() {
+  const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+  const s = (timerSeconds % 60).toString().padStart(2, '0');
+  document.getElementById('timerDisplay').textContent = `${m}:${s}`;
+}
+
+// ===== KEYBOARD =====
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeForm();
+  if (e.key === 'Enter' && document.getElementById('addForm').classList.contains('open')) saveBlock();
+});
+
+// ===== START =====
+// Default blocks for demo
+if (blocks.length === 0) {
+  const demos = [
+    { id:'1', name:'Утренняя зарядка', start:'07:00', end:'07:30', cat:'health', done:false },
+    { id:'2', name:'Завтрак + планирование', start:'07:30', end:'08:00', cat:'personal', done:false },
+    { id:'3', name:'Глубокая работа', start:'09:00', end:'11:00', cat:'work', done:false },
+    { id:'4', name:'Чтение / обучение', start:'11:00', end:'12:00', cat:'learning', done:false },
+    { id:'5', name:'Обед', start:'13:00', end:'13:30', cat:'personal', done:false },
+    { id:'6', name:'Работа над задачами', start:'14:00', end:'17:00', cat:'work', done:false },
+    { id:'7', name:'Спорт', start:'18:00', end:'19:00', cat:'health', done:false },
+    { id:'8', name:'Ужин + отдых', start:'19:30', end:'21:00', cat:'rest', done:false },
+    { id:'9', name:'Вечернее обучение', start:'21:00', end:'22:00', cat:'learning', done:false },
+    { id:'10', name:'Подготовка ко сну', start:'22:30', end:'23:00', cat:'rest', done:false },
+  ];
+  blocks = demos;
+  save();
+}
+
+init();
+</script>
+</body>
+</html>
